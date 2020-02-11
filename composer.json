@@ -1,0 +1,18 @@
+{
+	"name": "dol-lab/spaces-invitation",
+	"license": "GPL-2.0-or-later",
+	"description": "A WordPress Plugin which handles things related to invitations.",
+	"type": "wordpress-plugin",
+	"keywords": [
+		"wordpress", "wp", "spaces", "community"
+	],
+	"support": {
+		"issues": "https://github.com/dol-lab/spaces-invitation/issues"
+	},
+	"require": {
+		"squizlabs/php_codesniffer": "^3.3.1"
+    },
+	"require-dev": {
+        "wp-coding-standards/wpcs": "2.*"
+    }
+}
