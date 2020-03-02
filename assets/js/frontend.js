@@ -35,6 +35,9 @@ jQuery(function($) {
 
             return false;
         });
+        $('.invitation-link').on('click', function(){
+            $(this).select();
+        });
 
         var value = !!input.attr('data-checked');
         input.prop('checked', value);
