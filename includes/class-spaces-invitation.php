@@ -109,6 +109,8 @@ class Spaces_Invitation {
 	 */
 	public $invite_link;
 
+    private $db;
+
 	/**
 	 * Constructor funtion.
 	 *
@@ -116,8 +118,11 @@ class Spaces_Invitation {
 	 * @param string $version Plugin version.
 	 */
 	public function __construct( $file = '', $version = '1.0.0' ) {
+        global $wpdb;
+
 		$this->_version = $version;
 		$this->_token   = 'Spaces_Invitation';
+        $this->db       = $wpdb;
 
 		// Load plugin environment variables.
 		$this->file       = $file;
@@ -138,9 +143,27 @@ class Spaces_Invitation {
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_styles' ), 10, 1 );
 
 		// Load API for generic admin functions.
-		if ( is_admin() ) {
-			$this->admin = new Spaces_Invitation_Admin_API();
-		}
+		// if ( is_admin() ) {
+		// 	$this->admin = new Spaces_Invitation_Admin_API();
+		// }
+
+        add_action( 'init', array( $this, 'init' ) );
+
+        add_action( 'wp_loaded', function() {
+            $current_url = trim( $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], '?') < 0 ? strlen($_SERVER['REQUEST_URI']) : strpos($_SERVER['REQUEST_URI'], '?')), '/' );
+            if( is_user_logged_in() && get_home_url() === $current_url && get_blog_option( null, 'invitation_link' ) === $_GET['invitation_link'] && !!get_blog_option( null, 'invitation_link_active' ) )
+            {
+                if( !is_user_member_of_blog( get_current_user_id(), get_current_blog_id() ) )
+                {
+                    add_user_to_blog( get_current_blog_id(), get_current_user_id(), get_option('default_role') );
+                }
+                header( 'Location: ' . get_home_url() );
+                exit;
+            }
+
+        } );
+        add_action( 'wp_ajax_invitation_link', array( $this, 'on_ajax_call' ) );
+        add_action( 'wp_ajax_nopriv_invitation_link', array( $this, 'on_ajax_call' ) );
 
 		// Handle localisation.
 		$this->load_plugin_textdomain();
@@ -211,8 +234,13 @@ class Spaces_Invitation {
 	 * @since   1.0.0
 	 */
 	public function enqueue_scripts() {
-		wp_register_script( $this->_token . '-frontend', esc_url( $this->assets_url ) . 'js/frontend' . $this->script_suffix . '.js', array( 'jquery' ), $this->_version, true );
+		wp_register_script( $this->_token . '-frontend', esc_url( $this->assets_url ) . 'js/frontend' . '.js', array( 'jquery' ), $this->_version, true );
 		wp_enqueue_script( $this->_token . '-frontend' );
+        wp_localize_script(
+            $this->_token . '-frontend',
+            'INVITATION_ADMIN_URL',
+            array( 'url' => admin_url( 'admin-ajax.php' ) )
+        );
 	} // End enqueue_scripts ()
 
 	/**
@@ -331,4 +359,87 @@ class Spaces_Invitation {
 		update_option( $this->_token . '_version', $this->_version );
 	} // End _log_version_number ()
 
+    public function init() {
+        if( $this->is_allowed() )
+        {
+            add_filter( 'invitation_link_setting', function() {
+                $this->generate_link_when_needed();
+                $is_private_or_community = $this->blog_is_private_or_community();
+                add_blog_option( null, 'invitation_link_active', (string)!$is_private_or_community );
+                $link = get_home_url() . '?invitation_link=' . get_blog_option( null, 'invitation_link' );
+                $link_enabled = get_blog_option( null, 'invitation_link_active' );
+                $toggle_button_class = $is_private_or_community ? '' : 'disabled';
+
+                return array(
+                    'id' => 'invitation-item',
+                    'html' => $this->render( 'settings', array(
+                        'link' => $link,
+                        'link_enabled' => $link_enabled,
+                        'toggle_button_class' => $toggle_button_class
+                    ) )
+                );
+            });
+        }
+    }
+
+    private function render( $template, $variables ) {
+        $keys = array_map(function( $key ) {
+            return '/{{ *' . preg_quote( $key ) . ' *}}/';
+        }, array_keys( $variables ) );
+        return preg_replace(
+            $keys,
+            array_values( $variables ),
+            file_get_contents( __DIR__ . '/views/' . $template . '.html' )
+        );
+    }
+
+    private function generate_link_when_needed() {
+        add_blog_option( null, 'invitation_link', sha1( uniqid() ) );
+    }
+
+    public function check_ajax_call() {
+        if(wp_doing_ajax()) {
+            $actions = array(
+                'invitation'
+            );
+
+            if( 'invitation_link' === $_POST['action'] ) {
+                $this->on_ajax_call();
+            }
+        }
+    }
+
+    public function on_ajax_call()
+    {
+        if( $this->is_allowed() )
+        {
+            update_blog_option(null, 'invitation_link_active', (string)($_POST['activate'] === 'true'));
+            wp_die();
+        }
+
+        echo 'you are not allowed to do that'.
+
+        wp_die();
+    }
+
+    private function get_current_blogs_public_value()
+    {
+        $result = $this->db->get_row( $this->db->prepare( 'select public from wp_blogs where blog_id = %d', (int)get_current_blog_id() ) , ARRAY_A )['public'];
+
+        return $result !== null ? (int)$result : null;
+    }
+
+    private function is_allowed()
+    {
+        $public = $this->get_current_blogs_public_value();
+
+        return null !== $public && (-2 !== $public || current_user_can( 'promote_users' )); // -2 === private space
+    }
+
+    private function blog_is_private_or_community()
+    {
+        $public = $this->get_current_blogs_public_value();
+
+        return in_array($public, [-2, -1]);
+    }
 }

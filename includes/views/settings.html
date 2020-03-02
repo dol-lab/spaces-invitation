@@ -1,0 +1,16 @@
+<label class="icon-left label-wrapper" for="yo">
+    <i class="fa fa-link"></i>
+    <span>
+        Invitation Link enabled
+    </span>
+    <div class="switch small invitation-toggle success {{ toggle_button_class }}">
+        <input type="checkbox" class="switch-input" name="invitation-input" id="invitation-input" data-checked="{{ link_enabled }}"/>
+        <label class="switch-paddle" for="invitation-input">
+        </label>
+    </div>
+</label>
+<div class="spaces-invitation-link-box disabled">
+    <span data-tooltip aria-haspopup="true" class="has-tip" data-disable-hover="false" tabindex="1" title="Press Ctrl+C to copy.">
+        <input class="invitation-link" type="text" value="{{ link }}" readonly="true" />
+    </span>
+</div>

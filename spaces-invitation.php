@@ -20,10 +20,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Load plugin class files.
-require_once 'includes/class-spaces-invitation.php';
-require_once 'includes/class-spaces-invitation-settings.php'; // might be nice to have some settings in the backend like renewing invite-links.
+require_once __DIR__ . '/includes/class-spaces-invitation.php';
+require_once __DIR__ . '/includes/class-spaces-invitation-settings.php'; // might be nice to have some settings in the backend like renewing invite-links.
 
-require_once 'includes/class-spaces-invite-link'; // access class functions via spaces_invitation()->invite_link->...
+// require_once __DIR__ . '/includes/class-spaces-invite-link'; // access class functions via spaces_invitation()->invite_link->...
 
 /**
  * Returns the main instance of Spaces_Invitation to prevent the need to use globals.
@@ -40,3 +40,5 @@ function spaces_invitation() {
 
 	return $instance;
 }
+
+spaces_invitation();
