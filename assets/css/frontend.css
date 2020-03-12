@@ -1,33 +1,28 @@
 /* phpcs:ignore */
 
-#invitation-item .label-wrapper
-{
-    align-items: start;
+#invitation-item .label-wrapper {
+	align-items: start;
 }
 
-#invitation-item input.invitation-link
-{
-    cursor: text;
-    color: #888888;
-    padding: 0;
-    border: 0;
-    height: auto;
-    margin-top: 5px;
+#invitation-item input.invitation-link {
+	cursor: text;
+	color: #888888;
+	padding: 0;
+	border: 0;
+	height: auto;
+	margin-top: 5px;
 }
 
 
-#invitation-item .has-tip
-{
-    cursor: text;
+#invitation-item .has-tip {
+	cursor: text;
 }
 
-.spaces-invitation-link-box
-{
-    margin-left: 26px;
+.spaces-invitation-link-box {
+	margin-left: 26px;
 }
 
 .spaces-invitation-link-box.disabled,
-.invitation-toggle.disabled
-{
-    display: none;
+.invitation-toggle.disabled {
+	display: none;
 }

@@ -14,8 +14,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Spaces_Invitation {
 
-    const PRIVATE = -2;
-    const COMMUNITY = -1;
+	const PRIVATE   = -2;
+	const COMMUNITY = -1;
 
 	/**
 	 * The single instance of Spaces_Invitation.
@@ -112,7 +112,12 @@ class Spaces_Invitation {
 	 */
 	private $invite_link;
 
-    private $db;
+	/**
+	 * WordPress Database Class.
+	 *
+	 * @var \wpdb
+	 */
+	private $db;
 
 	/**
 	 * Constructor funtion.
@@ -121,11 +126,11 @@ class Spaces_Invitation {
 	 * @param string $version Plugin version.
 	 */
 	public function __construct( $file = '', $version = '1.0.0' ) {
-        global $wpdb;
+		global $wpdb;
 
 		$this->_version = $version;
 		$this->_token   = 'Spaces_Invitation';
-        $this->db       = $wpdb;
+		$this->db       = $wpdb;
 
 		// Load plugin environment variables.
 		$this->file       = $file;
@@ -137,6 +142,9 @@ class Spaces_Invitation {
 
 		register_activation_hook( $this->file, array( $this, 'install' ) );
 
+		add_filter( 'invitation_link_setting', array( $this, 'add_settings_item' ) );
+		add_filter( 'privacy_description', array( $this, 'invalid_invitation_link' ) );
+
 		// Load frontend JS & CSS.
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_styles' ), 10 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ), 10 );
@@ -145,112 +153,107 @@ class Spaces_Invitation {
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ), 10, 1 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_styles' ), 10, 1 );
 
-		// Load API for generic admin functions.
-		// if ( is_admin() ) {
-		// 	$this->admin = new Spaces_Invitation_Admin_API();
-		// }
+		add_action( 'wp_loaded', array( $this, 'maybe_add_user_and_redirect' ) );
+		add_action( 'wp_ajax_invitation_link', array( $this, 'on_ajax_call' ) );
+		add_action( 'wp_ajax_nopriv_invitation_link', array( $this, 'on_ajax_call' ) );
 
-        add_action( 'init', array( $this, 'init' ) );
-
-        if($_GET['src'] === 'invitation')
-        {
-            add_filter( 'privacy_description', function( $description ) {
-                return '<strong>Sorry... invalid invitation link.</strong><br/>' . $description;
-            } );
-        }
-
-        add_action( 'wp_loaded', function() {
-            $uri = $_SERVER['REQUEST_URI'];
-            $question_mark = strpos( $uri, '?' );
-
-            $current_url = trim( $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . substr( $uri, 0, $question_mark < 0 ? strlen( $uri ) : $question_mark ), '/' );
-            if( !is_user_logged_in() || get_home_url() !== $current_url )
-            {
-                return;
-            }
-            if( get_blog_option( null, 'invitation_link' ) === $_GET['invitation_link'] && !!get_blog_option( null, 'invitation_link_active' ) )
-            {
-                if( !is_user_member_of_blog( get_current_user_id(), get_current_blog_id() ) )
-                {
-                    add_user_to_blog( get_current_blog_id(), get_current_user_id(), get_option('default_role') );
-                }
-                header( 'Location: ' . get_home_url() );
-                exit;
-            }
-            else if( $_GET['invitation_link'] )
-            {
-                header( 'Location: ' . get_home_url() . '/wp-login.php?action=privacy&src=invitation' );exit;
-            }
-        } );
-        add_action( 'wp_ajax_invitation_link', array( $this, 'on_ajax_call' ) );
-        add_action( 'wp_ajax_nopriv_invitation_link', array( $this, 'on_ajax_call' ) );
-
-		// Handle localisation.
-		$this->load_plugin_textdomain();
+		$this->load_plugin_textdomain();// Handle localisation.
 		add_action( 'init', array( $this, 'load_localisation' ), 0 );
-	} // End __construct ()
 
-    /**
-     * Returns the genrated invitation link.
-     * If there is no link in the database the link is generated.
-     *
-     * With this function the invitation link can be added and retrieved only when it is required and not always.
-     *
-     * @return string
-     */
-    public function invitation_link()
-    {
-        if( null === $this->invite_link )
-        {
-            add_blog_option( null, 'invitation_link', sha1( uniqid() ) );
-            $this->invite_link = get_blog_option( null, 'invitation_link' );
-        }
-
-        return $this->invite_link;
-    }
-
-	/**
-	 * Register post type function.
-	 *
-	 * @param string $post_type Post Type.
-	 * @param string $plural Plural Label.
-	 * @param string $single Single Label.
-	 * @param string $description Description.
-	 * @param array  $options Options array.
-	 *
-	 * @return bool|string|Spaces_Invitation_Post_Type
-	 */
-	public function register_post_type( $post_type = '', $plural = '', $single = '', $description = '', $options = array() ) {
-
-		if ( ! $post_type || ! $plural || ! $single ) {
-			return false;
-		}
-
-		$post_type = new Spaces_Invitation_Post_Type( $post_type, $plural, $single, $description, $options );
-
-		return $post_type;
 	}
 
 	/**
-	 * Wrapper function to register a new taxonomy.
-	 *
-	 * @param string $taxonomy Taxonomy.
-	 * @param string $plural Plural Label.
-	 * @param string $single Single Label.
-	 * @param array  $post_types Post types to register this taxonomy for.
-	 * @param array  $taxonomy_args Taxonomy arguments.
-	 *
-	 * @return bool|string|Spaces_Invitation_Taxonomy
+	 * Add an option field to the spaces "defaultspace"-theme.
 	 */
-	public function register_taxonomy( $taxonomy = '', $plural = '', $single = '', $post_types = array(), $taxonomy_args = array() ) {
+	public function add_settings_item() {
+		if ( ! $this->can_change_invitation_options() ) {
+			return;
+		}
+		$is_private_or_community = $this->blog_is_private_or_community();
+		add_blog_option( null, 'invitation_link_active', (string) ! $is_private_or_community );
+		$link                = get_home_url() . '?invitation_link=' . $this->get_invitation_link();
+		$link_enabled        = get_option( 'invitation_link_active' );
+		$toggle_button_class = $is_private_or_community ? '' : 'disabled';
 
-		if ( ! $taxonomy || ! $plural || ! $single ) {
-			return false;
+		return array(
+			'id'   => 'invitation-item',
+			'html' => $this->render(
+				'settings',
+				array(
+					'link'                => $link,
+					'link_enabled'        => $link_enabled,
+					'toggle_button_class' => $toggle_button_class,
+				)
+			),
+		);
+	}
+
+	/**
+	 * Triggered by the filter 'privacy_description' (by the plugin more-privacy-options).
+	 *
+	 * @param string $description The already existing description.
+	 * @return string
+	 */
+	public function invalid_invitation_link( $description ) {
+		if ( isset( $_GET['src'] ) && 'invitation' === $_GET['src'] ) {
+			$text = esc_html( __( 'Sorry... The invitation link you used is not (or no longer) valid.' ) );
+			return "<strong>$text</strong><br/>$description";
+		}
+		return $description;
+	}
+
+	/**
+	 * Triggered by 'wp_loaded'.
+	 * Check if the invitation_link link is present and valid.
+	 *
+	 * @todo the user might already be a subscriber and giving her the default_role could be a promition.
+	 * @todo users might click on the invitation link they received again and again. one day its no longer valid. they currently recieve an unappropriate error message.
+	 */
+	public function maybe_add_user_and_redirect() {
+
+		$current_url = trim( $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . strtok( $_SERVER['REQUEST_URI'], '?' ), '/' );
+
+		if ( ! isset( $_GET['invitation_link'] ) ) { // the cheapest way out (performancewise). the invitation_link queryvar is not set.
+			return;
 		}
 
-		$taxonomy = new Spaces_Invitation_Taxonomy( $taxonomy, $plural, $single, $post_types, $taxonomy_args );
+		if (
+			get_home_url() !== $current_url // we are not on the home_url.
+			|| ! is_user_logged_in() // the user is not logged in.
+		) {
+			return;
+		}
 
-		return $taxonomy;
+		if ( get_option( 'invitation_link' ) === $_GET['invitation_link'] // queryvar matches blog setting.
+			&& get_option( 'invitation_link_active' )
+		) {
+			if ( ! is_user_member_of_blog( get_current_user_id(), get_current_blog_id() ) ) {
+				add_user_to_blog( get_current_blog_id(), get_current_user_id(), get_option( 'default_role' ) );
+			}
+			header( 'Location: ' . get_home_url() );
+			exit;
+		}
+
+		header( 'Location: ' . get_home_url() . '/wp-login.php?action=privacy&src=invitation' );
+		exit;
+
+	}
+
+	/**
+	 * Returns the genrated invitation link.
+	 * If there is no link in the database the link is generated.
+	 *
+	 * With this function the invitation link can be added and retrieved only when it is required and not always.
+	 *
+	 * @return string
+	 */
+	public function get_invitation_link() {
+		if ( null === $this->invite_link ) {
+			add_blog_option( null, 'invitation_link', sha1( uniqid() ) );
+			$this->invite_link = get_option( 'invitation_link' );
+		}
+
+		return $this->invite_link;
 	}
 
 	/**
@@ -275,11 +278,11 @@ class Spaces_Invitation {
 	public function enqueue_scripts() {
 		wp_register_script( $this->_token . '-frontend', esc_url( $this->assets_url ) . 'js/frontend' . '.js', array( 'jquery' ), $this->_version, true );
 		wp_enqueue_script( $this->_token . '-frontend' );
-        wp_localize_script(
-            $this->_token . '-frontend',
-            'INVITATION_ADMIN_URL',
-            array( 'url' => admin_url( 'admin-ajax.php' ) )
-        );
+		wp_localize_script(
+			$this->_token . '-frontend',
+			'INVITATION_ADMIN_URL',
+			array( 'url' => admin_url( 'admin-ajax.php' ) )
+		);
 	} // End enqueue_scripts ()
 
 	/**
@@ -290,8 +293,8 @@ class Spaces_Invitation {
 	 * @return void
 	 */
 	public function admin_enqueue_styles( $hook = '' ) {
-		wp_register_style( $this->_token . '-admin', esc_url( $this->assets_url ) . 'css/admin.css', array(), $this->_version );
-		wp_enqueue_style( $this->_token . '-admin' );
+		// wp_register_style( $this->_token . '-admin', esc_url( $this->assets_url ) . 'css/admin.css', array(), $this->_version );
+		// wp_enqueue_style( $this->_token . '-admin' );
 	} // End admin_enqueue_styles ()
 
 	/**
@@ -305,8 +308,8 @@ class Spaces_Invitation {
 	 * @since   1.0.0
 	 */
 	public function admin_enqueue_scripts( $hook = '' ) {
-		wp_register_script( $this->_token . '-admin', esc_url( $this->assets_url ) . 'js/admin' . $this->script_suffix . '.js', array( 'jquery' ), $this->_version, true );
-		wp_enqueue_script( $this->_token . '-admin' );
+		// wp_register_script( $this->_token . '-admin', esc_url( $this->assets_url ) . 'js/admin' . $this->script_suffix . '.js', array( 'jquery' ), $this->_version, true );
+		// wp_enqueue_script( $this->_token . '-admin' );
 	} // End admin_enqueue_scripts ()
 
 	/**
@@ -387,110 +390,68 @@ class Spaces_Invitation {
 		$this->_log_version_number();
 	} // End install ()
 
-    /**
-     * Adds the settings item when the user has the permissions to see it.
-     */
-    public function init() {
-        if( $this->is_allowed() )
-        {
-            add_filter( 'invitation_link_setting', function() {
-                $is_private_or_community = $this->blog_is_private_or_community();
-                add_blog_option( null, 'invitation_link_active', (string)!$is_private_or_community );
-                $link = get_home_url() . '?invitation_link=' . $this->invitation_link();
-                $link_enabled = get_blog_option( null, 'invitation_link_active' );
-                $toggle_button_class = $is_private_or_community ? '' : 'disabled';
 
-                return array(
-                    'id' => 'invitation-item',
-                    'html' => $this->render( 'settings', array(
-                        'link' => $link,
-                        'link_enabled' => $link_enabled,
-                        'toggle_button_class' => $toggle_button_class
-                    ) )
-                );
-            });
-        }
-    }
+	/**
+	 * This function is called when the ajax call for 'invitation_link' is called.
+	 * The function never returns.
+	 */
+	public function on_ajax_call() {
+		if ( $this->can_change_invitation_options() ) {
+			update_blog_option( null, 'invitation_link_active', (string) ( 'true' === $_POST['activate'] ) );
+			wp_die();
+		}
+		echo esc_html( __( 'You are not allowed to do that.' ) );
+		die();
+	}
 
-    /**
-     * This function is called when the ajax call for 'invitation_link' is called.
-     * The function never returns.
-     */
-    public function on_ajax_call()
-    {
-        if( $this->is_allowed() )
-        {
-            update_blog_option(null, 'invitation_link_active', (string)($_POST['activate'] === 'true'));
-            wp_die();
-        }
+	/**
+	 * Renders the view $template with $variables.
+	 * In the view the variables can be accessed with {{ variable_name }}.
+	 * The view is taken from the view/ folder and a .html sufix is appended.
+	 *
+	 * @param mixed $template
+	 * @param mixed $variables
+	 *
+	 * @reutrn string
+	 */
+	private function render( $template, $variables ) {
+		$keys = array_map(
+			function( $key ) {
+				return '/{{ *' . preg_quote( $key ) . ' *}}/';
+			},
+			array_keys( $variables )
+		);
 
-        echo 'you are not allowed to do that'.
+		return preg_replace(
+			$keys,
+			array_values( $variables ),
+			file_get_contents( __DIR__ . '/views/' . $template . '.html' )
+		);
+	}
 
-        wp_die();
-    }
+	/**
+	 * Returns whether the user is allowed to change see, activate / deactivate the invitation link.
+	 *
+	 * @return bool
+	 */
+	private function can_change_invitation_options() {
+		$public = (int) get_option( 'blog_public' );
+		return null !== $public && ( self::PRIVATE !== $public || current_user_can( 'promote_users' ) );
+	}
 
-    /**
-     * Renders the view $template with $variables.
-     * In the view the variables can be accessed with {{ variable_name }}.
-     * The view is taken from the view/ folder and a .html sufix is appended.
-     *
-     * @param mixed $template
-     * @param mixed $variables
-     *
-     * @reutrn string
-     */
-    private function render( $template, $variables ) {
-        $keys = array_map(function( $key ) {
-            return '/{{ *' . preg_quote( $key ) . ' *}}/';
-        }, array_keys( $variables ) );
-
-        return preg_replace(
-            $keys,
-            array_values( $variables ),
-            file_get_contents( __DIR__ . '/views/' . $template . '.html' )
-        );
-    }
-
-    /**
-     * Returns the "public" field from the current blog.
-     * This function is going to be changed when a function is found to retrieve the value with wordpress (instead of directly from the database).
-     *
-     * @return int|null
-     */
-    private function get_current_blogs_public_value()
-    {
-        $result = $this->db->get_row( $this->db->prepare( 'select public from wp_blogs where blog_id = %d', (int)get_current_blog_id() ) , ARRAY_A )['public'];
-
-        return $result !== null ? (int)$result : null;
-    }
-
-    /**
-     * Returns whether the user is allowed to change see, activate / deactivate the invitation link.
-     *
-     * @return bool
-     */
-    private function is_allowed()
-    {
-        $public = $this->get_current_blogs_public_value();
-
-        return null !== $public && (self::PRIVATE !== $public || current_user_can( 'promote_users' ));
-    }
-
-    /**
-     * Returns wheter the current blog is private or community.
-     *
-     * @return bool
-     */
-    private function blog_is_private_or_community()
-    {
-        $public = $this->get_current_blogs_public_value();
-        if($public === self::PRIVATE)
-        {
-            return true;
-        }
-
-        return $public === self::COMMUNITY && !spaces()->blogs_privacy->is_self_registration_enabled( get_current_blog_id() );
-    }
+	/**
+	 * Returns true if  the current blog is either private or community.
+	 * Return false for everything else.
+	 *
+	 * @return bool
+	 */
+	private function blog_is_private_or_community() {
+		$public = (int) get_option( 'blog_public' );
+		if ( self::PRIVATE === $public ) {
+			return true;
+		}
+		return self::COMMUNITY === $public && ! spaces()->blogs_privacy->is_self_registration_enabled( get_current_blog_id() );
+	}
 
 	/**
 	 * Log the plugin version number.
