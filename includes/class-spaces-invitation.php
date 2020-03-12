@@ -14,6 +14,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Spaces_Invitation {
 
+    const PRIVATE = -2;
+    const COMMUNITY = -1;
+
 	/**
 	 * The single instance of Spaces_Invitation.
 	 *
@@ -103,11 +106,11 @@ class Spaces_Invitation {
 	public $script_suffix;
 
 	/**
-	 * Undocumented variable
+	 * This value is used to cache the invitation link (use the method invitation_link())
 	 *
-	 * @var Space_Invite_Link
+	 * @var string|null
 	 */
-	public $invite_link;
+	private $invite_link;
 
     private $db;
 
@@ -149,9 +152,23 @@ class Spaces_Invitation {
 
         add_action( 'init', array( $this, 'init' ) );
 
+        if($_GET['src'] === 'invitation')
+        {
+            add_filter( 'privacy_description', function( $description ) {
+                return '<strong>Sorry... invalid invitation link.</strong><br/>' . $description;
+            } );
+        }
+
         add_action( 'wp_loaded', function() {
-            $current_url = trim( $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], '?') < 0 ? strlen($_SERVER['REQUEST_URI']) : strpos($_SERVER['REQUEST_URI'], '?')), '/' );
-            if( is_user_logged_in() && get_home_url() === $current_url && get_blog_option( null, 'invitation_link' ) === $_GET['invitation_link'] && !!get_blog_option( null, 'invitation_link_active' ) )
+            $uri = $_SERVER['REQUEST_URI'];
+            $question_mark = strpos( $uri, '?' );
+
+            $current_url = trim( $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . substr( $uri, 0, $question_mark < 0 ? strlen( $uri ) : $question_mark ), '/' );
+            if( !is_user_logged_in() || get_home_url() !== $current_url )
+            {
+                return;
+            }
+            if( get_blog_option( null, 'invitation_link' ) === $_GET['invitation_link'] && !!get_blog_option( null, 'invitation_link_active' ) )
             {
                 if( !is_user_member_of_blog( get_current_user_id(), get_current_blog_id() ) )
                 {
@@ -160,7 +177,10 @@ class Spaces_Invitation {
                 header( 'Location: ' . get_home_url() );
                 exit;
             }
-
+            else if( $_GET['invitation_link'] )
+            {
+                header( 'Location: ' . get_home_url() . '/wp-login.php?action=privacy&src=invitation' );exit;
+            }
         } );
         add_action( 'wp_ajax_invitation_link', array( $this, 'on_ajax_call' ) );
         add_action( 'wp_ajax_nopriv_invitation_link', array( $this, 'on_ajax_call' ) );
@@ -169,6 +189,25 @@ class Spaces_Invitation {
 		$this->load_plugin_textdomain();
 		add_action( 'init', array( $this, 'load_localisation' ), 0 );
 	} // End __construct ()
+
+    /**
+     * Returns the genrated invitation link.
+     * If there is no link in the database the link is generated.
+     *
+     * With this function the invitation link can be added and retrieved only when it is required and not always.
+     *
+     * @return string
+     */
+    public function invitation_link()
+    {
+        if( null === $this->invite_link )
+        {
+            add_blog_option( null, 'invitation_link', sha1( uniqid() ) );
+            $this->invite_link = get_blog_option( null, 'invitation_link' );
+        }
+
+        return $this->invite_link;
+    }
 
 	/**
 	 * Register post type function.
@@ -348,25 +387,16 @@ class Spaces_Invitation {
 		$this->_log_version_number();
 	} // End install ()
 
-	/**
-	 * Log the plugin version number.
-	 *
-	 * @access  public
-	 * @return  void
-	 * @since   1.0.0
-	 */
-	private function _log_version_number() { //phpcs:ignore
-		update_option( $this->_token . '_version', $this->_version );
-	} // End _log_version_number ()
-
+    /**
+     * Adds the settings item when the user has the permissions to see it.
+     */
     public function init() {
         if( $this->is_allowed() )
         {
             add_filter( 'invitation_link_setting', function() {
-                $this->generate_link_when_needed();
                 $is_private_or_community = $this->blog_is_private_or_community();
                 add_blog_option( null, 'invitation_link_active', (string)!$is_private_or_community );
-                $link = get_home_url() . '?invitation_link=' . get_blog_option( null, 'invitation_link' );
+                $link = get_home_url() . '?invitation_link=' . $this->invitation_link();
                 $link_enabled = get_blog_option( null, 'invitation_link_active' );
                 $toggle_button_class = $is_private_or_community ? '' : 'disabled';
 
@@ -382,33 +412,10 @@ class Spaces_Invitation {
         }
     }
 
-    private function render( $template, $variables ) {
-        $keys = array_map(function( $key ) {
-            return '/{{ *' . preg_quote( $key ) . ' *}}/';
-        }, array_keys( $variables ) );
-        return preg_replace(
-            $keys,
-            array_values( $variables ),
-            file_get_contents( __DIR__ . '/views/' . $template . '.html' )
-        );
-    }
-
-    private function generate_link_when_needed() {
-        add_blog_option( null, 'invitation_link', sha1( uniqid() ) );
-    }
-
-    public function check_ajax_call() {
-        if(wp_doing_ajax()) {
-            $actions = array(
-                'invitation'
-            );
-
-            if( 'invitation_link' === $_POST['action'] ) {
-                $this->on_ajax_call();
-            }
-        }
-    }
-
+    /**
+     * This function is called when the ajax call for 'invitation_link' is called.
+     * The function never returns.
+     */
     public function on_ajax_call()
     {
         if( $this->is_allowed() )
@@ -422,6 +429,34 @@ class Spaces_Invitation {
         wp_die();
     }
 
+    /**
+     * Renders the view $template with $variables.
+     * In the view the variables can be accessed with {{ variable_name }}.
+     * The view is taken from the view/ folder and a .html sufix is appended.
+     *
+     * @param mixed $template
+     * @param mixed $variables
+     *
+     * @reutrn string
+     */
+    private function render( $template, $variables ) {
+        $keys = array_map(function( $key ) {
+            return '/{{ *' . preg_quote( $key ) . ' *}}/';
+        }, array_keys( $variables ) );
+
+        return preg_replace(
+            $keys,
+            array_values( $variables ),
+            file_get_contents( __DIR__ . '/views/' . $template . '.html' )
+        );
+    }
+
+    /**
+     * Returns the "public" field from the current blog.
+     * This function is going to be changed when a function is found to retrieve the value with wordpress (instead of directly from the database).
+     *
+     * @return int|null
+     */
     private function get_current_blogs_public_value()
     {
         $result = $this->db->get_row( $this->db->prepare( 'select public from wp_blogs where blog_id = %d', (int)get_current_blog_id() ) , ARRAY_A )['public'];
@@ -429,17 +464,43 @@ class Spaces_Invitation {
         return $result !== null ? (int)$result : null;
     }
 
+    /**
+     * Returns whether the user is allowed to change see, activate / deactivate the invitation link.
+     *
+     * @return bool
+     */
     private function is_allowed()
     {
         $public = $this->get_current_blogs_public_value();
 
-        return null !== $public && (-2 !== $public || current_user_can( 'promote_users' )); // -2 === private space
+        return null !== $public && (self::PRIVATE !== $public || current_user_can( 'promote_users' ));
     }
 
+    /**
+     * Returns wheter the current blog is private or community.
+     *
+     * @return bool
+     */
     private function blog_is_private_or_community()
     {
         $public = $this->get_current_blogs_public_value();
+        if($public === self::PRIVATE)
+        {
+            return true;
+        }
 
-        return in_array($public, [-2, -1]);
+        return $public === self::COMMUNITY && !spaces()->blogs_privacy->is_self_registration_enabled( get_current_blog_id() );
     }
+
+	/**
+	 * Log the plugin version number.
+	 *
+	 * @access  public
+	 * @return  void
+	 * @since   1.0.0
+	 */
+	private function _log_version_number() { //phpcs:ignore
+		update_option( $this->_token . '_version', $this->_version );
+	} // End _log_version_number ()
+
 }
