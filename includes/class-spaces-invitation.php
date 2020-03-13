@@ -142,7 +142,7 @@ class Spaces_Invitation {
 
 		register_activation_hook( $this->file, array( $this, 'install' ) );
 
-		add_filter( 'invitation_link_setting', array( $this, 'add_settings_item' ) );
+		add_filter( 'default_space_setting', array( $this, 'add_settings_item' ) );
 		add_filter( 'privacy_description', array( $this, 'invalid_invitation_link' ) );
 
 		// Load frontend JS & CSS.
@@ -165,7 +165,7 @@ class Spaces_Invitation {
 	/**
 	 * Add an option field to the spaces "defaultspace"-theme.
 	 */
-	public function add_settings_item() {
+	public function add_settings_item( $settings_items ) {
 		if ( ! $this->can_change_invitation_options() ) {
 			return;
 		}
@@ -175,7 +175,7 @@ class Spaces_Invitation {
 		$link_enabled        = get_option( 'invitation_link_active' );
 		$toggle_button_class = $is_private_or_community ? '' : 'disabled';
 
-		return array(
+		$item = array(
 			'id'   => 'invitation-item',
 			'html' => $this->render(
 				'settings',
@@ -186,6 +186,10 @@ class Spaces_Invitation {
 				)
 			),
 		);
+
+		array_splice($settings_items, count( $settings_items ) -1, 0, array( $item ));
+
+		return $settings_items;
 	}
 
 	/**
