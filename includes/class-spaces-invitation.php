@@ -393,21 +393,23 @@ class Spaces_Invitation {
     public function init() {
         if( $this->is_allowed() )
         {
-            add_filter( 'invitation_link_setting', function() {
+            add_filter( 'default_space_setting', function( $settings_items ) {
                 $is_private_or_community = $this->blog_is_private_or_community();
                 add_blog_option( null, 'invitation_link_active', (string)!$is_private_or_community );
                 $link = get_home_url() . '?invitation_link=' . $this->invitation_link();
                 $link_enabled = get_blog_option( null, 'invitation_link_active' );
                 $toggle_button_class = $is_private_or_community ? '' : 'disabled';
 
-                return array(
+                array_splice( $settings_items, count( $settings_items ) -1, 0, array( array(
                     'id' => 'invitation-item',
                     'html' => $this->render( 'settings', array(
                         'link' => $link,
                         'link_enabled' => $link_enabled,
                         'toggle_button_class' => $toggle_button_class
                     ) )
-                );
+                ) ) );
+
+                return $settings_items;
             });
         }
     }
