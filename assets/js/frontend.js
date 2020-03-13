@@ -18,8 +18,8 @@ jQuery(function($) {
 
         var input = $('.invitation-toggle input.switch-input');
         var linkBox = $('.spaces-invitation-link-box');
-        $('.invitation-toggle').on('click', function(e){
-            var self = $(this);
+        $('.invitation-label').on('click', function(e){
+            var self = $('.invitation-toggle');
             var startValue = input.prop('checked');
             input.prop('checked', !startValue);
             linkBox.toggleClass('disabled', startValue);// show / hide the invitation link

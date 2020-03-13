@@ -211,7 +211,6 @@ class Spaces_Invitation {
 	 * Check if the invitation_link link is present and valid.
 	 *
 	 * @todo the user might already be a subscriber and giving her the default_role could be a promition.
-	 * @todo users might click on the invitation link they received again and again. one day its no longer valid. they currently recieve an unappropriate error message.
 	 */
 	public function maybe_add_user_and_redirect() {
 
@@ -222,8 +221,10 @@ class Spaces_Invitation {
 		}
 
 		if (
-			get_home_url() !== $current_url // we are not on the home_url.
+			! isset( $_GET['invitation_link'] ) // the cheapest way out (performancewise). the invitation_link queryvar is not set.
+			|| get_home_url() !== $current_url // we are not on the home_url.
 			|| ! is_user_logged_in() // the user is not logged in.
+			|| is_user_member_of_blog( get_current_user_id(), get_current_blog_id() )
 		) {
 			return;
 		}
@@ -231,9 +232,7 @@ class Spaces_Invitation {
 		if ( get_option( 'invitation_link' ) === $_GET['invitation_link'] // queryvar matches blog setting.
 			&& get_option( 'invitation_link_active' )
 		) {
-			if ( ! is_user_member_of_blog( get_current_user_id(), get_current_blog_id() ) ) {
-				add_user_to_blog( get_current_blog_id(), get_current_user_id(), get_option( 'default_role' ) );
-			}
+			add_user_to_blog( get_current_blog_id(), get_current_user_id(), get_option( 'default_role' ) );
 			header( 'Location: ' . get_home_url() );
 			exit;
 		}
