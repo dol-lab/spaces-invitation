@@ -187,7 +187,7 @@ class Spaces_Invitation {
 			),
 		);
 
-		array_splice($settings_items, count( $settings_items ) -1, 0, array( $item ));
+		array_splice( $settings_items, count( $settings_items ) - 1, 0, array( $item ) );
 
 		return $settings_items;
 	}
@@ -214,7 +214,7 @@ class Spaces_Invitation {
 	 */
 	public function maybe_add_user_and_redirect() {
 
-		$current_url = trim( $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . strtok( $_SERVER['REQUEST_URI'], '?' ), '/' );
+		$current_url = trim( '//' . $_SERVER['HTTP_HOST'] . strtok( $_SERVER['REQUEST_URI'], '?' ), '/' );
 
 		if ( ! isset( $_GET['invitation_link'] ) ) { // the cheapest way out (performancewise). the invitation_link queryvar is not set.
 			return;
