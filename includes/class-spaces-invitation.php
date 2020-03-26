@@ -173,13 +173,14 @@ class Spaces_Invitation {
 		add_blog_option( null, 'invitation_link_active', (string) ! $is_private_or_community );
 		$link                = get_home_url() . '?invitation_link=' . $this->get_invitation_link();
 		$link_enabled        = get_option( 'invitation_link_active' );
-		$toggle_button_class = $is_private_or_community ? '' : 'disabled';
+		$toggle_button_class = $is_private_or_community ? '' : 'link-disabled';
 
 		$item = array(
 			'id'   => 'invitation-item',
 			'html' => $this->render(
 				'settings',
 				array(
+					'text'                => $link_enabled ? 'enabled' : 'disabled',
 					'link'                => $link,
 					'link_enabled'        => $link_enabled,
 					'toggle_button_class' => $toggle_button_class,

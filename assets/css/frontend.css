@@ -23,7 +23,15 @@
 	margin-left: 26px;
 }
 
-.spaces-invitation-link-box.disabled,
-.invitation-toggle.disabled {
+.spaces-invitation-link-box.link-disabled,
+.invitation-toggle.link-disabled {
 	display: none;
+}
+
+.invitation-label {
+    cursor: pointer;
+}
+
+.invitation-label.link-disabled {
+    cursor: default;
 }

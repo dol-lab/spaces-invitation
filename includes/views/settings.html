@@ -1,7 +1,7 @@
-<label class="icon-left label-wrapper invitation-label" for="yo">
+<label class="icon-left label-wrapper invitation-label {{ toggle_button_class }}">
     <i class="fa fa-link"></i>
-    <span>
-        Invitation Link enabled
+    <span class="invitation-text">
+        Invitation Link {{ text }}
     </span>
     <div class="switch small invitation-toggle success {{ toggle_button_class }}">
         <input type="checkbox" class="switch-input" name="invitation-input" id="invitation-input" data-checked="{{ link_enabled }}"/>
