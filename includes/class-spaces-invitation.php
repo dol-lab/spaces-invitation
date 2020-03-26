@@ -213,12 +213,7 @@ class Spaces_Invitation {
 	 * @todo the user might already be a subscriber and giving her the default_role could be a promition.
 	 */
 	public function maybe_add_user_and_redirect() {
-
-		$current_url = trim( '//' . $_SERVER['HTTP_HOST'] . strtok( $_SERVER['REQUEST_URI'], '?' ), '/' );
-
-		if ( ! isset( $_GET['invitation_link'] ) ) { // the cheapest way out (performancewise). the invitation_link queryvar is not set.
-			return;
-		}
+		$current_url = trim( $_SERVER['WP_HOME'] . strtok( $_SERVER['REQUEST_URI'], '?' ), '/' );
 
 		if (
 			! isset( $_GET['invitation_link'] ) // the cheapest way out (performancewise). the invitation_link queryvar is not set.
