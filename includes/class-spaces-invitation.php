@@ -224,7 +224,7 @@ class Spaces_Invitation {
 			! isset( $_GET['invitation_link'] ) // the cheapest way out (performancewise). the invitation_link queryvar is not set.
 			|| get_home_url() !== $current_url // we are not on the home_url.
 			|| ! is_user_logged_in() // the user is not logged in.
-			|| is_user_member_of_blog( get_current_user_id(), get_current_blog_id() )
+			|| is_super_admin()
 		) {
 			return;
 		}
@@ -232,7 +232,12 @@ class Spaces_Invitation {
 		if ( get_option( 'invitation_link' ) === $_GET['invitation_link'] // queryvar matches blog setting.
 			&& get_option( 'invitation_link_active' )
 		) {
-			add_user_to_blog( get_current_blog_id(), get_current_user_id(), get_option( 'default_role' ) );
+			if ( is_user_member_of_blog( get_current_user_id(), get_current_blog_id() ) ) {
+				$this->update_role_if_needed();
+			} else {
+				add_user_to_blog( get_current_blog_id(), get_current_user_id(), get_option( 'default_role' ) );
+			}
+
 			header( 'Location: ' . get_home_url() );
 			exit;
 		}
@@ -466,4 +471,39 @@ class Spaces_Invitation {
 		update_option( $this->_token . '_version', $this->_version );
 	} // End _log_version_number ()
 
+	/**
+	 * Checks if $default_role > $user_role.
+	 *
+	 * @param WP_Role $user_role
+	 * @param WP_Role default_role
+	 */
+	private function default_role_is_greater( $user_role, $default_role ) {
+		$user_capabilities = array_keys( array_filter( $user_role->capabilities, 'boolval' ) );
+		if ( is_super_admin() ) {
+			return false;
+		}
+
+		foreach( $user_capabilities as $capability ) {
+			if ( $default_role->capabilities[ $capability ] !== true ) {
+				return false;
+			}
+		}
+
+		return count( array_filter( $default_role->capabilities, 'boolval' ) ) > count( $user_capabilities );
+	}
+
+	/**
+	 * Updates the current_user's role if $default_role > $user_role.
+	 */
+	private function update_role_if_needed() {
+		$user              = wp_get_current_user();
+		$user_role_name    = $user->roles[ array_key_first( $user->roles) ];
+		$default_role_name = get_option( 'default_role' );
+		$user_role         = get_role( $user_role_name );
+		$default_role      = get_role( $default_role_name );
+
+		if($this->default_role_is_greater( $user_role, $default_role )) {
+			add_user_to_blog( get_current_blog_id(), get_current_user_id(), $default_role_name );
+		}
+	}
 }

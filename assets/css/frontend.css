@@ -11,6 +11,7 @@
 	border: 0;
 	height: auto;
 	margin-top: 5px;
+    text-overflow: ellipsis;
 }
 
 
