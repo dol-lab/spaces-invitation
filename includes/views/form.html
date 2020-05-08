@@ -1,0 +1,12 @@
+<div>
+    <p><strong>{{ message }}</strong></p>
+    <input class="invitation-link-field" placeholder="Invitation link" name="invitation_link" type="password"/>
+    <button class="button expanded" type="submit">Enter</button>
+    <script type="text/javascript">
+     window.addEventListener('load', function(){
+         var loginForm = document.querySelector('#loginform');
+         loginForm.method = 'GET';
+         loginForm.action = '{{ home_url }}';
+     });
+    </script>
+</div>
