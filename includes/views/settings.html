@@ -1,16 +1,17 @@
 <label class="icon-left label-wrapper invitation-label {{ toggle_button_class }}">
     <i class="fa fa-link"></i>
-    <span class="invitation-text">
-        Invitation Link {{ text }}
-    </span>
+    <span class="invitation-text"></span>
     <div class="switch small invitation-toggle success {{ toggle_button_class }}">
         <input type="checkbox" class="switch-input" name="invitation-input" id="invitation-input" data-checked="{{ link_enabled }}"/>
         <label class="switch-paddle" for="invitation-input">
         </label>
     </div>
 </label>
-<div class="spaces-invitation-link-box disabled">
+<div class="spaces-invitation-box spaces-invitation-link-box">
     <span data-tooltip aria-haspopup="true" class="has-tip" data-disable-hover="false" tabindex="1" title="Press Ctrl+C to copy.">
         <input class="invitation-link" type="text" value="{{ link }}" readonly="true" />
     </span>
+</div>
+<div class="spaces-invitation-box">
+    User who click on the Invitation link will be added with the role {{ default_role }}.
 </div>

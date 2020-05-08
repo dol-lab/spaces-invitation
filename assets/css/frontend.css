@@ -19,7 +19,7 @@
 	cursor: text;
 }
 
-.spaces-invitation-link-box {
+.spaces-invitation-box {
 	margin-left: 26px;
 }
 
@@ -28,10 +28,20 @@
 	display: none;
 }
 
-.invitation-label {
+.invitation-label,
+.self-registration-label:not(.link-disabled) {
     cursor: pointer;
 }
 
 .invitation-label.link-disabled {
     cursor: default;
+}
+
+li > label.self-registration-disabled.label-wrapper,
+li > label.self-registration-label.private {
+    display: none;
+}
+
+.self-registration-label.private + .self-registration-disabled {
+    display: flex;
 }
