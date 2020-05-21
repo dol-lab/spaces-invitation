@@ -162,9 +162,12 @@ class Spaces_Invitation {
 
 		$this->load_plugin_textdomain();// Handle localisation.
 		add_action( 'init', array( $this, 'load_localisation' ), 0 );
-		add_filter( 'is_self_registration_enabled' , function() {
-			return $this->is_self_registration_enabled( get_current_blog_id() );
-		} );
+		add_filter(
+			'is_self_registration_enabled',
+			function() {
+				return $this->is_self_registration_enabled( get_current_blog_id() );
+			}
+		);
 	}
 
 	/**
@@ -177,7 +180,7 @@ class Spaces_Invitation {
 			$link                = get_home_url() . '?invitation_link=' . $this->get_invitation_link();
 			$link_enabled        = get_option( 'invitation_link_active' );
 			$toggle_button_class = $is_private_or_community ? '' : 'link-disabled';
-			$default_role = get_option( 'default_role' );
+			$default_role        = get_option( 'default_role' );
 
 			$item = array(
 				'id'   => 'invitation-item',
@@ -188,7 +191,7 @@ class Spaces_Invitation {
 						'link'                => $link,
 						'link_enabled'        => $link_enabled,
 						'toggle_button_class' => $toggle_button_class,
-						'default_role'        => $default_role
+						'default_role'        => $default_role,
 					)
 				),
 			);
@@ -224,7 +227,7 @@ class Spaces_Invitation {
 	 * @todo the user might already be a subscriber and giving her the default_role could be a promition.
 	 */
 	public function maybe_add_user_and_redirect() {
-		$current_url = trim( $_SERVER['WP_HOME'] . strtok( $_SERVER['REQUEST_URI'], '?' ), '/' );
+		$current_url    = trim( $_SERVER['WP_HOME'] . strtok( $_SERVER['REQUEST_URI'], '?' ), '/' );
 		$get_parameters = '';
 
 		// var_dump(get_option( 'invitation_link_active' ));exit;
@@ -241,8 +244,7 @@ class Spaces_Invitation {
 		if ( $this->is_self_registration_enabled( get_current_blog_id() ) ) {
 			$this->handle_self_registration( $current_url );
 			return;
-		}
-		elseif ( 'success' === $_GET['invitation'] ) {
+		} elseif ( 'success' === $_GET['invitation'] ) {
 			add_filter( 'spaces_invitation_notices', $this->message( 'You successfully joined this space' ) );
 			return;
 		} elseif (
@@ -321,14 +323,14 @@ class Spaces_Invitation {
 			$this->_token . '-frontend',
 			'INVITATION_TEXT_OPTIONS',
 			array(
-				'invitation' => array(
-					'true' => 'Invitation Link enabled',
-					'false' => 'Invitation Link disabled'
+				'invitation'        => array(
+					'true'  => 'Invitation Link enabled',
+					'false' => 'Invitation Link disabled',
 				),
 				'self_registration' => array(
-					'true' => 'Self Registration enabled',
-					'false' => 'Self Registration disabled'
-				)
+					'true'  => 'Self Registration enabled',
+					'false' => 'Self Registration disabled',
+				),
 			)
 		);
 	} // End enqueue_scripts ()
@@ -475,12 +477,14 @@ class Spaces_Invitation {
 		die();
 	}
 
-	public function add_form( $message )
-	{
-		return $message . $this->render('form', array(
-			'home_url' => get_home_url(),
-			'message' => esc_html( __( 'Enter this space with an invitation link:' ) )
-		) );
+	public function add_form( $message ) {
+		return $message . $this->render(
+			'form',
+			array(
+				'home_url' => get_home_url(),
+				'message'  => esc_html( __( 'Enter this space with an invitation link:' ) ),
+			)
+		);
 	}
 
 	/**
@@ -514,16 +518,16 @@ class Spaces_Invitation {
 	 * @return bool
 	 */
 	private function can_change_invitation_options() {
-		return /* null !== $public && ( self::PRIVATE !== $public || */ current_user_can( 'promote_users' ) /* ) */;
+		return /* null !== $public && ( self::PRIVATE !== $public || */ current_user_can( 'promote_users' ); /* ) */
 	}
 
 	/**
 	 * Returns wether the user is allowed to change / see, activate / deactivate self registration
-	 * 
+	 *
 	 * @return bool
 	 */
 	private function can_change_self_registration() {
-		return !$this->blog_is_private() && ( current_user_can( 'manage_options' ) || is_super_admin() );
+		return ! $this->blog_is_private() && ( current_user_can( 'manage_options' ) || is_super_admin() );
 	}
 
 	/**
@@ -554,7 +558,7 @@ class Spaces_Invitation {
 	 */
 	private function default_role_is_greater() {
 		$user              = wp_get_current_user();
-		$user_role_name    = $user->roles[ array_key_first( $user->roles) ];
+		$user_role_name    = $user->roles[ array_key_first( $user->roles ) ];
 		$default_role_name = get_option( 'default_role' );
 		$user_role         = get_role( $user_role_name );
 		$default_role      = get_role( $default_role_name );
@@ -564,7 +568,7 @@ class Spaces_Invitation {
 			return false;
 		}
 
-		foreach( $user_capabilities as $capability ) {
+		foreach ( $user_capabilities as $capability ) {
 			if ( $default_role->capabilities[ $capability ] !== true ) {
 				return false;
 			}
@@ -582,43 +586,42 @@ class Spaces_Invitation {
 		}
 	}
 
-	private function message( $message )
-	{
+	private function message( $message ) {
 		return function() use ( $message ) {
 			// return esc_html( __( $message ) );
 			return $this->render( 'welcome', array( 'message' => esc_html( __( $message ) ) ) );
 		};
 	}
 
-	private function self_registration_build_item()
-	{
+	private function self_registration_build_item() {
 		$enabled = $this->is_self_registration_enabled( get_current_blog_id() );
 
 		return array(
 			'id'   => 'self-registration-item',
-			'html' => $this->render( 'self_registration', array(
-				'text' => esc_html( __( $enabled ? 'enabled' : 'disabled' ) ),
-				'enabled' => $enabled,
-				'is_private_class' => $this->blog_is_private() ? 'private' : ''
-			) ),
+			'html' => $this->render(
+				'self_registration',
+				array(
+					'text'             => esc_html( __( $enabled ? 'enabled' : 'disabled' ) ),
+					'enabled'          => $enabled,
+					'is_private_class' => $this->blog_is_private() ? 'private' : '',
+				)
+			),
 		);
 	}
 
 	/**
 	 * Returns if the current blog is a private blog
 	 */
-	private function blog_is_private()
-	{
+	private function blog_is_private() {
 		return self::PRIVATE === (int) get_option( 'blog_public' );
 	}
 
-	private function handle_self_registration( $current_url )
-	{
+	private function handle_self_registration( $current_url ) {
 		if (
 			! is_user_logged_in()
 			|| get_home_url() !== $current_url
 			|| $this->blog_is_private()
-			|| (is_user_member_of_blog( get_current_user_id(), get_current_blog_id() ) && !$this->default_role_is_greater())
+			|| ( is_user_member_of_blog( get_current_user_id(), get_current_blog_id() ) && ! $this->default_role_is_greater() )
 		) {
 			return;
 		}
@@ -630,28 +633,36 @@ class Spaces_Invitation {
 			exit;
 		}
 
-		add_filter( 'spaces_invitation_notices', function( $message ) {
-			return $message . $this->render( 'join', array(
-				'label' => __( 'Join this space' ),
-				'url' => $current_url . '?join=true'
-			) );
-		} );
+		add_filter(
+			'spaces_invitation_notices',
+			function( $message ) {
+				return $message . $this->render(
+					'join',
+					array(
+						'label' => __( 'Join this space' ),
+						'url'   => $current_url . '?join=true',
+					)
+				);
+			}
+		);
 	}
 
-	private function build_leave_space_items()
-	{
-		if( ! is_user_member_of_blog( get_current_user_id() ) ) {
+	private function build_leave_space_items() {
+		if ( ! is_user_member_of_blog( get_current_user_id() ) ) {
 			return array();
 		}
 
 		return array(
 			array(
 				'id'   => 'leave-space-item',
-				'html' => $this->render( 'leave_space', array(
-					'text' => __( 'Leave Space' ),
-					'url' => get_home_url() . '?leave_space=true'
-				) ),
-			)
+				'html' => $this->render(
+					'leave_space',
+					array(
+						'text' => __( 'Leave Space' ),
+						'url'  => get_home_url() . '?leave_space=true',
+					)
+				),
+			),
 		);
 	}
 }
