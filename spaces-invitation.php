@@ -35,7 +35,7 @@ function spaces_invitation() {
 	$instance = Spaces_Invitation::instance( __FILE__, '1.0.0' );
 
 	if ( is_null( $instance->settings ) ) {
-		$instance->settings = Spaces_Invitation_Settings::instance( $instance );
+		// $instance->settings = Spaces_Invitation_Settings::instance( $instance );
 	}
 
 	return $instance;
