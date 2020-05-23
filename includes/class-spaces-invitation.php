@@ -155,8 +155,8 @@ class Spaces_Invitation {
 
 		add_action( 'wp_loaded', array( $this, 'maybe_add_user_and_redirect' ) );
 
-		add_action( 'wp_ajax_invitation_link', array( $this, 'on_ajax_call' ) );
-		add_action( 'wp_ajax_nopriv_invitation_link', array( $this, 'on_ajax_call' ) );
+		add_action( 'wp_ajax_invitation_link', array( $this, 'ajax_toggle_invitation_link' ) );
+		add_action( 'wp_ajax_nopriv_invitation_link', array( $this, 'ajax_toggle_invitation_link' ) );
 		add_action( 'wp_ajax_self_registration', array( $this, 'toggle_self_registration' ) );
 		add_action( 'wp_ajax_nopriv_self_registration', array( $this, 'toggle_self_registration' ) );
 
@@ -223,11 +223,9 @@ class Spaces_Invitation {
 	/**
 	 * Triggered by 'wp_loaded'.
 	 * Check if the invitation_link link is present and valid.
-	 *
-	 * @todo the user might already be a subscriber and giving her the default_role could be a promition.
 	 */
 	public function maybe_add_user_and_redirect() {
-		$current_url    = trim( $_SERVER['WP_HOME'] . strtok( $_SERVER['REQUEST_URI'], '?' ), '/' );
+		$current_url    = $this->get_current_url();
 		$get_parameters = '';
 
 		// var_dump(get_option( 'invitation_link_active' ));exit;
@@ -235,7 +233,12 @@ class Spaces_Invitation {
 			add_filter( 'privacy_description', array( $this, 'add_form' ) );
 		}
 
-		if ( get_home_url() === $current_url && 'true' === $_GET['leave_space'] ) {
+		if ( isset( $_GET['invitation'] ) && 'success' === $_GET['invitation'] ) {
+			add_filter( 'spaces_invitation_notices', $this->callout( 'You successfully joined this space' ) );
+			return;
+		}
+
+		if ( isset( $_GET['leave_space'] ) && 'true' === $_GET['leave_space'] && get_home_url() === $current_url ) {
 			remove_user_from_blog( get_current_user_id() );
 			header( 'Location: ' . get_home_url() );
 			exit;
@@ -243,9 +246,6 @@ class Spaces_Invitation {
 
 		if ( $this->is_self_registration_enabled( get_current_blog_id() ) ) {
 			$this->handle_self_registration( $current_url );
-			return;
-		} elseif ( 'success' === $_GET['invitation'] ) {
-			add_filter( 'spaces_invitation_notices', $this->message( 'You successfully joined this space' ) );
 			return;
 		} elseif (
 			! isset( $_GET['invitation_link'] ) // the cheapest way out (performancewise). the invitation_link queryvar is not set.
@@ -256,8 +256,9 @@ class Spaces_Invitation {
 			return;
 		}
 
-		if ( get_option( 'invitation_link' ) === $_GET['invitation_link'] // queryvar matches blog setting.
+		if ( isset( $_GET['invitation_link'] )
 			&& get_option( 'invitation_link_active' )
+			&& get_option( 'invitation_link' ) === $_GET['invitation_link'] // queryvar matches blog setting.
 		) {
 			if ( is_user_member_of_blog( get_current_user_id(), get_current_blog_id() ) ) {
 				$this->update_role_if_needed();
@@ -285,7 +286,7 @@ class Spaces_Invitation {
 	 */
 	public function get_invitation_link() {
 		if ( null === $this->invite_link ) {
-			add_blog_option( null, 'invitation_link', sha1( uniqid() ) );
+			update_option( 'invitation_link', sha1( uniqid() ) );
 			$this->invite_link = get_option( 'invitation_link' );
 		}
 
@@ -442,16 +443,26 @@ class Spaces_Invitation {
 
 	/**
 	 * This function is called when the ajax call for 'invitation_link' is called.
+	 *
+	 * @todo add nonces.
 	 * The function never returns.
 	 */
-	public function on_ajax_call() {
-		if ( $this->can_change_invitation_options() ) {
-			update_blog_option( null, 'invitation_link_active', (string) ( 'true' === $_POST['activate'] ) );
-			wp_die();
+	public function ajax_toggle_invitation_link() {
+		if ( ! $this->can_change_invitation_options() ) {
+			wp_send_json_error( array( 'message' => esc_html__( 'You are not allowed to do that.', 'spaces-invitation' ) ) );
+		}
+		if ( ! isset( $_POST['activate'] ) ) {
+			wp_send_json_error( array( 'message' => 'Specify a value for activate' ) );
+		}
+		$update_value = (string) ( 'true' === $_POST['activate'] );
+		$updated      = update_option( 'invitation_link_active', $update_value );
+		if ( $updated ) {
+			$boolstring = $update_value ? 'true' : 'false';
+			wp_send_json( array( 'message' => "The option 'invitation_link_active' is now " . $boolstring ) );
+		} else {
+			wp_send_json_error( array( 'message' => "The option 'invitation_link_active' was not updated." ) );
 		}
 
-		echo esc_html( __( 'You are not allowed to do that.' ) );
-		die();
 	}
 
 	/**
@@ -553,43 +564,54 @@ class Spaces_Invitation {
 		update_option( $this->_token . '_version', $this->_version );
 	} // End _log_version_number ()
 
-	/**
-	 * Checks if $default_role > $user_role.
-	 */
-	private function default_role_is_greater() {
-		$user              = wp_get_current_user();
-		$user_role_name    = $user->roles[ array_key_first( $user->roles ) ];
-		$default_role_name = get_option( 'default_role' );
-		$user_role         = get_role( $user_role_name );
-		$default_role      = get_role( $default_role_name );
 
-		$user_capabilities = array_keys( array_filter( $user_role->capabilities, 'boolval' ) );
+	/**
+	 *
+	 *  Check if the user already has all capabilities of the default_role (specified in wp_options)
+	 *
+	 * The current user role might have more capabilities than the default role.
+	 * So it doesn't make sense to add the default role.
+	 * (WP supports having multiple roles only from a code-perspekive, but doesn't have interfaces).
+	 *
+	 * @return bool return true if the user already has all the capabilities of the default role. false for superadmin.
+	 */
+	private function user_has_all_caps_of_default_role() {
+		if ( ! is_user_member_of_blog() ) {
+			return false;
+		}
+		$role = get_role( get_option( 'default_role' ) );
 		if ( is_super_admin() ) {
 			return false;
 		}
-
-		foreach ( $user_capabilities as $capability ) {
-			if ( $default_role->capabilities[ $capability ] !== true ) {
+		$role_caps = array_keys( array_filter( $role->capabilities, 'boolval' ) );
+		foreach ( $role_caps as $cap ) {
+			if ( ! current_user_can( $cap ) ) {
+				error_log( "does not have cap $cap" );
 				return false;
 			}
 		}
-
-		return count( array_filter( $default_role->capabilities, 'boolval' ) ) > count( $user_capabilities );
+		return true;
 	}
 
 	/**
-	 * Updates the current_user's role if $default_role > $user_role.
+	 * Updates the current_user's role if the $default_role is a upgrade (compared to the current role [if she has one]).
 	 */
 	private function update_role_if_needed() {
-		if ( $this->default_role_is_greater() ) {
-			add_user_to_blog( get_current_blog_id(), get_current_user_id(), get_option( 'default_role' ) );
+		$default_role_name = get_option( 'default_role' );
+		if ( ! $this->user_has_all_caps_of_default_role() ) {
+			add_user_to_blog( get_current_blog_id(), get_current_user_id(), $default_role_name );
 		}
 	}
 
-	private function message( $message ) {
-		return function() use ( $message ) {
-			// return esc_html( __( $message ) );
-			return $this->render( 'welcome', array( 'message' => esc_html( __( $message ) ) ) );
+	private function callout( $message, $type = 'success' ) {
+		return function() use ( $message, $type ) {
+			return $this->render(
+				'callout',
+				array(
+					'message' => esc_html( $message ),
+					'type'    => $type,
+				),
+			);
 		};
 	}
 
@@ -617,34 +639,58 @@ class Spaces_Invitation {
 	}
 
 	private function handle_self_registration( $current_url ) {
-		if (
-			! is_user_logged_in()
-			|| get_home_url() !== $current_url
-			|| $this->blog_is_private()
-			|| ( is_user_member_of_blog( get_current_user_id(), get_current_blog_id() ) && ! $this->default_role_is_greater() )
+		if ( ! is_user_logged_in()
+			|| $this->blog_is_private() // there is no self-registration in private blogs.
+			|| $this->user_has_all_caps_of_default_role() // the user already has all the capabilies of role that would be added.
 		) {
 			return;
 		}
 
-		if ( 'true' === $_GET['join'] ) {
+		if ( isset( $_GET['join'] ) && 'true' === $_GET['join'] ) {
 			add_user_to_blog( get_current_blog_id(), get_current_user_id(), get_option( 'default_role' ) );
-
 			header( 'Location: ' . get_home_url() . '?invitation=success' );
 			exit;
 		}
 
-		add_filter(
-			'spaces_invitation_notices',
-			function( $message ) {
-				return $message . $this->render(
-					'join',
+		add_filter( 'spaces_invitation_notices', array( $this, 'filter_join_this_space_notice' ) );
+	}
+
+	public function filter_join_this_space_notice( $message ) {
+		$change_url = add_query_arg( 'join', 'true', ds_get_current_url() );
+
+		/**
+		 * Superadmins don't get a "join this space" - button.
+		 */
+		if ( is_super_admin() ) {
+			if ( ! is_user_member_of_blog() ) {
+				$callout_message = esc_html__( 'You are currently logged in as a super-admin. Please use a regular account to collaborate.', 'defaultspace' );
+				$callout         = $this->render(
+					'callout',
 					array(
-						'label' => __( 'Join this space' ),
-						'url'   => $current_url . '?join=true',
-					)
+						'message' => $callout_message,
+						'type'    => 'warning',
+					),
 				);
+				return $message . $callout;
 			}
+			return; // superadmin is already a member.
+		}
+
+		/**
+		 * @todo: add title
+		 */
+		$join_button = $this->render(
+			'join',
+			array(
+				'label' => esc_html__( 'Join this space' ),
+				'title' => esc_html__(
+					'You become an author in this space and can write posts. You can leave the space again anytime you want.',
+					'defaultspace'
+				),
+				'url'   => $change_url,
+			)
 		);
+		return $message . $join_button;
 	}
 
 	private function build_leave_space_items() {
@@ -664,5 +710,14 @@ class Spaces_Invitation {
 				),
 			),
 		);
+	}
+
+	private function get_current_url() {
+		global $wp;
+		if ( '' === get_option( 'permalink_structure' ) ) {
+			return home_url( add_query_arg( array( $_GET ), $wp->request ) );
+		} else {
+			return home_url( trailingslashit( add_query_arg( array( $_GET ), $wp->request ) ) );
+		}
 	}
 }
