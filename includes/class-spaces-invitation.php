@@ -176,7 +176,7 @@ class Spaces_Invitation {
 	public function add_settings_item( $settings_items ) {
 		if ( $this->can_change_invitation_options() ) {
 			$is_private_or_community = $this->blog_is_private_or_community();
-			add_blog_option( null, 'invitation_link_active', (string) ! $is_private_or_community );
+			// update_option( 'invitation_link_active', (string) ! $is_private_or_community );
 			$link                = get_home_url() . '?invitation_link=' . $this->get_invitation_link();
 			$link_enabled        = get_option( 'invitation_link_active' );
 			$toggle_button_class = $is_private_or_community ? '' : 'link-disabled';
