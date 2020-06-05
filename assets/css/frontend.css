@@ -23,7 +23,12 @@
 	margin-left: 26px;
 }
 
+.menu.icon-left > li.invitation-hide,
+.invitation-hide,
+.spaces-invitation-box.link-disabled,
 .spaces-invitation-link-box.link-disabled,
+.menu.icon-left > li > label.invitation-label.no-toggle .invitation-toggle,
+label.invitation-label.no-toggle .invitation-toggle,
 .invitation-toggle.link-disabled {
 	display: none;
 }
@@ -44,4 +49,28 @@ li > label.self-registration-label.private {
 
 .self-registration-label.private + .self-registration-disabled {
     display: flex;
+}
+
+.invitation-edit-link {
+    cursor: pointer;
+}
+
+.spaces-invitation-link-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.spaces-invitation-edit-modal {
+    position: absolute;
+    z-index: 1;
+    transform: translateY(100%);
+    display: flex;
+    left: 20px;
+}
+
+.spaces-invitation-edit-modal input
+{
+    width: 200px;
+
 }

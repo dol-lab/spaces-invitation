@@ -7,11 +7,13 @@
         </label>
     </div>
 </label>
-<div class="spaces-invitation-box spaces-invitation-link-box">
+<div class="spaces-invitation-box spaces-invitation-link-box {{ link_enabled_class }}">
     <span data-tooltip aria-haspopup="true" class="has-tip" data-disable-hover="false" tabindex="1" title="Press Ctrl+C to copy.">
         <input class="invitation-link" type="text" value="{{ link }}" readonly="true" />
     </span>
+    <i class="fa fa-edit invitation-edit-link"></i>
 </div>
-<div class="spaces-invitation-box">
+<div class="spaces-invitation-box {{ link_enabled_class }}">
     User who click on the Invitation link will be added with the role {{ default_role }}.
 </div>
+

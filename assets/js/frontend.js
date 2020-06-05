@@ -41,17 +41,22 @@ jQuery(function($) {
             },
             disable: function(){
                 state && toggleFn();
+            },
+            isEnabled: function(){
+                return state;
             }
         };
     };
 
-    var createSimpleEndpoint = function(url, action){
+    var createSimpleEndpoint = function(url, action, key, nonce){
         var send = function(){
-            send = function(activate) {
-                return $.post(url, {
+            send = function(value) {
+                var sendMe = {};
+                sendMe[key] = value;
+                return $.post(url, Object.assign({}, sendMe, {
                     action: action,
-                    activate: activate
-                });
+                    _wpnonce: nonce
+                }));
             };
             var dummyPromise = {fail: function(){return dummyPromise;}, then: function(f){f(); return dummyPromise;}};
 
@@ -64,16 +69,20 @@ jQuery(function($) {
     };
 
     var wrapEndpointWithTextUpdate = function(textNode, endpoint, textOptions, onEnable){
+        var onRequest = function(){
+            onRequest = function(enable, promise){
+                promise.then(function(){
+                    onEnable(enable);
+                });
+            };
+        };
         return function(enable){
             textNode.textContent = textOptions[enable];
             var promise = endpoint(enable);
             promise.fail(function(){
                 textNode.textContent = textOptions[!enable];
             });
-            if(enable)
-            {
-                promise.then(onEnable);
-            }
+            onRequest(enable, promise);
             return promise;
         };
     };
@@ -83,23 +92,40 @@ jQuery(function($) {
         var registrationSwitch = dummySwitch;
         var invitationEndpoint = wrapEndpointWithTextUpdate(
             document.querySelector('.invitation-label .invitation-text'),
-            createSimpleEndpoint(INVITATION_ADMIN_URL.url, 'invitation_link'), INVITATION_TEXT_OPTIONS.invitation,
+            createSimpleEndpoint(INVITATION_ADMIN_URL.url, 'invitation_link', 'activate', INVITATION_NONCES.invitation_link),
+            INVITATION_TEXT_OPTIONS.invitation,
             function(enable){
-                registrationSwitch.disable();
+                enable && registrationSwitch.disable();
+                var method = enable ? 'remove' : 'add';
+                Array.from(document.querySelectorAll('.spaces-invitation-box')).forEach(function(node){
+                    node.classList[method]('link-disabled');
+                });
             }
         );
         var selfRegistrationEndpoint = wrapEndpointWithTextUpdate(
             document.querySelector('.self-registration-label .self-registration-text'),
-            createSimpleEndpoint(INVITATION_ADMIN_URL.url, 'self_registration'), INVITATION_TEXT_OPTIONS.self_registration,
+            createSimpleEndpoint(INVITATION_ADMIN_URL.url, 'self_registration', 'activate', INVITATION_NONCES.self_registration),
+            INVITATION_TEXT_OPTIONS.self_registration,
             function(enable){
-                invitationSwitch.disable();
+                enable && invitationSwitch.disable();
             }
         );
         var invitationLabel = document.querySelector('.invitation-label');
         var registrationLabel = document.querySelector('.self-registration-label');
-        if(invitationLabel && !invitationLabel.classList.contains('link-disabled'))
+        var createInvitationSwitch = function(){
+            return createSwitch(invitationLabel, '.invitation-toggle', invitationEndpoint);
+        };
+        if(invitationLabel)
         {
-            invitationSwitch = createSwitch(invitationLabel, '.invitation-toggle', invitationEndpoint);
+            if(!invitationLabel.classList.contains('no-toggle'))
+            {
+                invitationSwitch = createInvitationSwitch();
+            }
+            else
+            {
+                var checked = !invitationLabel.querySelector('input.switch-input').getAttribute('checked');
+                document.querySelector('.invitation-label .invitation-text').textContent = INVITATION_TEXT_OPTIONS.invitation[checked];
+            }
         }
         if(!registrationLabel)
         {
@@ -107,10 +133,31 @@ jQuery(function($) {
         }
         registrationSwitch = createSwitch(registrationLabel, '.self-registration-toggle', selfRegistrationEndpoint);
 
-        document.querySelector('.invitation-link').addEventListener('click', function(){
-            $(this).select();
+        (document.querySelector('.invitation-link') || {addEventListener: Void}).addEventListener('click', function(){
+            this.select();
         });
+        var updateInvitationSwitch = !invitationLabel ? Void : function(privacy){
+            if([-1, -2].includes(privacy))
+            {
+                if(invitationSwitch === dummySwitch)
+                {
+                    invitationSwitch = createInvitationSwitch();
+                }
+                invitationLabel.classList.remove('no-toggle');
+                invitationLabel.parentNode.classList.remove('invitation-hide');
+            }
+            else
+            {
+                invitationLabel.classList.add('no-toggle');
+                if(!invitationSwitch.isEnabled())
+                {
+                    invitationLabel.parentNode.classList.add('invitation-hide');
+                }
+            }
+        };
         document.addEventListener("spacePrivacyChanged", function (event) {
+            console.log('spaces privacy changed');
+            updateInvitationSwitch(event.detail.privacy);
             if(-2 === event.detail.privacy)
             {
                 registrationLabel.classList.add('private');
@@ -120,6 +167,46 @@ jQuery(function($) {
             {
                 registrationLabel.classList.remove('private');
             }
+        });
+
+        var saveLinkEndpoint = createSimpleEndpoint(INVITATION_ADMIN_URL.url, 'invitation_update_token', 'token', INVITATION_NONCES.invitation_update_token);
+        saveLinkEndpoint();
+        var currentToken = INVITATION_TOKEN.token;
+
+        document.querySelector('.invitation-edit-link').addEventListener('click', function(){
+            var node = document.createElement('div');
+            var input = document.createElement('input');
+            var button = document.createElement('button');
+            button.classList.add('button');
+            button.textContent = 'Save';
+            node.classList.add('spaces-invitation-edit-modal');
+            input.type = "text";
+            input.value = currentToken;
+            node.appendChild(input);
+            node.appendChild(button);
+
+            var removeSelf = function(event){
+                if(![node, input, button, this].includes(event.target))
+                {
+                    document.removeEventListener('click', removeSelf);
+                    node.remove();
+                }
+            }.bind(this);
+
+            button.addEventListener('click', function(){
+                var value = input.value;
+                saveLinkEndpoint(value).then(function(response){
+                    node.remove();
+                    document.querySelector('.invitation-link').textContent = response.link;
+                    currentToken = value;
+                });
+            });
+
+            document.addEventListener('click', removeSelf);
+
+            this.parentNode.appendChild(node);
+
+            input.select();
         });
     };
 }(jQuery));
