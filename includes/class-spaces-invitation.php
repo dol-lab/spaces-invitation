@@ -699,7 +699,7 @@ class Spaces_Invitation {
 	 *
 	 * @param string $message The filter argument from spaces_invitation_notices.
 	 */
-	public function filter_join_this_space_notice( string $message ) {
+	public function filter_join_this_space_notice( $message ) {
 		$change_url = add_query_arg( 'join', 'true', ds_get_current_url() );
 
 		/**
