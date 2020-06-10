@@ -165,10 +165,6 @@ class Spaces_Invitation {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_styles' ), 10 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ), 10 );
 
-		// Load admin JS & CSS.
-		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ), 10, 1 );
-		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_styles' ), 10, 1 );
-
 		add_action( 'wp_loaded', array( $this, 'maybe_add_user_and_redirect' ) );
 
 		add_action( 'wp_ajax_invitation_link', array( $this, 'ajax_toggle_invitation_link' ) );
@@ -203,8 +199,8 @@ class Spaces_Invitation {
 			$default_role                 = get_option( 'default_role' );
 
 			$item = array(
-				'id'    => 'invitation-item',
-				'html'  => $this->render(
+				'id'   => 'invitation-item',
+				'html' => $this->render(
 					'settings',
 					array(
 						'link'                => $link,
@@ -287,8 +283,7 @@ class Spaces_Invitation {
 	/**
 	 * Returns the full link for the invitation link.
 	 */
-	public function get_full_invitation_link()
-	{
+	public function get_full_invitation_link() {
 		return get_home_url() . '?invitation_link=' . $this->get_invitation_link();
 	}
 
@@ -350,33 +345,6 @@ class Spaces_Invitation {
 			)
 		);
 	} // End enqueue_scripts ()
-
-	/**
-	 * Admin enqueue style.
-	 *
-	 * @param string $hook Hook parameter.
-	 *
-	 * @return void
-	 */
-	public function admin_enqueue_styles( $hook = '' ) {
-		// wp_register_style( $this->_token . '-admin', esc_url( $this->assets_url ) . 'css/admin.css', array(), $this->_version );
-		// wp_enqueue_style( $this->_token . '-admin' );
-	} // End admin_enqueue_styles ()
-
-	/**
-	 * Load admin Javascript.
-	 *
-	 * @access  public
-	 *
-	 * @param string $hook Hook parameter.
-	 *
-	 * @return  void
-	 * @since   1.0.0
-	 */
-	public function admin_enqueue_scripts( $hook = '' ) {
-		// wp_register_script( $this->_token . '-admin', esc_url( $this->assets_url ) . 'js/admin' . $this->script_suffix . '.js', array( 'jquery' ), $this->_version, true );
-		// wp_enqueue_script( $this->_token . '-admin' );
-	} // End admin_enqueue_scripts ()
 
 	/**
 	 * Load plugin localisation
@@ -491,7 +459,7 @@ class Spaces_Invitation {
 		if ( $this->can_change_self_registration() ) {
 			$this->update_boolean_option_respond_json( 'self_registration', ( 'true' === $this->post->get( 'activate' ) ) );
 		} else {
-			wp_send_json_error( array( 'message' => "You are not allowed to do that." ) );
+			wp_send_json_error( array( 'message' => 'You are not allowed to do that.' ) );
 		}
 	}
 
@@ -544,7 +512,7 @@ class Spaces_Invitation {
 	 * @return bool
 	 */
 	private function can_change_invitation_options() {
-		return /* null !== $public && ( self::PRIVATE !== $public || */ current_user_can( 'promote_users' ); /* ) */
+		return current_user_can( 'promote_users' );
 	}
 
 	/**
@@ -565,7 +533,7 @@ class Spaces_Invitation {
 	private function blog_is_private_or_community() {
 		$public = (int) get_option( 'blog_public' );
 
-		return $this->blog_is_private() || ( self::COMMUNITY === $public /* && ! spaces()->blogs_privacy->is_self_registration_enabled( get_current_blog_id() ) */ );
+		return $this->blog_is_private() || ( self::COMMUNITY === $public );
 	}
 
 	/**
@@ -869,7 +837,7 @@ class Spaces_Invitation {
 	 * Updates the given option name with the given bool value and sends a json responds with either a success or failure.
 	 *
 	 * @param string $option_name The option to be updated.
-	 * @param bool $bool_value The value the option should become.
+	 * @param bool   $bool_value The value the option should become.
 	 */
 	private function update_boolean_option_respond_json( string $option_name, bool $bool_value ) {
 		$updated = update_option( $option_name, (string) $bool_value );
