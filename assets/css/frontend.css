@@ -33,7 +33,7 @@ label.invitation-label.no-toggle .invitation-toggle,
 	display: none;
 }
 
-.invitation-label,
+.invitation-label:not(.no-toggle),
 .self-registration-label:not(.link-disabled) {
     cursor: pointer;
 }

@@ -20,6 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Load plugin class files.
+require_once __DIR__ . '/includes/class-spaces-invitation-comparable.php';
 require_once __DIR__ . '/includes/class-spaces-invitation-request.php';
 require_once __DIR__ . '/includes/class-spaces-invitation.php';
 require_once __DIR__ . '/includes/class-spaces-invitation-settings.php'; // might be nice to have some settings in the backend like renewing invite-links.

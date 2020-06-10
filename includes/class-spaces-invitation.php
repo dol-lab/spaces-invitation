@@ -194,17 +194,16 @@ class Spaces_Invitation {
 	 */
 	public function add_settings_item( $settings_items ) {
 		if ( $this->can_change_invitation_options() ) {
-			$is_private_or_community = $this->blog_is_private_or_community();
-			$link_enabled            = $this->is_invitation_link_enabled();
-			$link                    = get_home_url() . '?invitation_link=' . $this->get_invitation_link();
-			$toggle_button_class     = $is_private_or_community ? '' : 'no-toggle';
-			$link_enabled_class      = $link_enabled ? '' : 'link-disabled';
-			$default_role            = get_option( 'default_role' );
-			$li_class                = $is_private_or_community || $link_enabled ? '' : 'invitation-hide'; // it makes no sense to show the item when the toggle is not visible and the link is diabled (:= useless and an empty item is rendered).
+			$is_self_registration_enabled = $this->is_self_registration_enabled();
+			$is_private_or_community      = $this->blog_is_private_or_community();
+			$link_enabled                 = $this->is_invitation_link_enabled();
+			$link                         = $this->get_full_invitation_link();
+			$toggle_button_class          = $is_self_registration_enabled ? 'no-toggle' : '';
+			$link_enabled_class           = $link_enabled ? '' : 'link-disabled';
+			$default_role                 = get_option( 'default_role' );
 
 			$item = array(
 				'id'    => 'invitation-item',
-				'class' => $li_class,
 				'html'  => $this->render(
 					'settings',
 					array(
@@ -254,7 +253,7 @@ class Spaces_Invitation {
 			return;
 		}
 
-		if ( $this->get->get( 'leave_space' ) === 'true' && get_home_url() === $current_url ) {
+		if ( $this->get->get( 'leave_space' ) === 'true' && $current_url->equals( get_home_url() ) ) {
 			remove_user_from_blog( get_current_user_id() );
 			header( 'Location: ' . get_home_url() );
 			exit;
@@ -262,8 +261,6 @@ class Spaces_Invitation {
 
 		if ( $this->is_invitation_link_enabled() ) {
 			$this->handle_invitation_link( $current_url );
-		} elseif ( $this->is_self_registration_enabled() ) {
-			$this->handle_self_registration();
 		}
 	}
 
@@ -285,6 +282,14 @@ class Spaces_Invitation {
 		}
 
 		return $this->invite_link;
+	}
+
+	/**
+	 * Returns the full link for the invitation link.
+	 */
+	public function get_full_invitation_link()
+	{
+		return get_home_url() . '?invitation_link=' . $this->get_invitation_link();
 	}
 
 	/**
@@ -465,15 +470,7 @@ class Spaces_Invitation {
 		if ( ! isset( $_POST['activate'] ) ) {
 			wp_send_json_error( array( 'message' => 'Specify a value for activate' ) );
 		}
-		$update_value = (string) ( 'true' === $_POST['activate'] );
-		$updated      = update_option( 'invitation_link_active', $update_value );
-		if ( $updated ) {
-			$boolstring = $update_value ? 'true' : 'false';
-			wp_send_json( array( 'message' => "The option 'invitation_link_active' is now " . $boolstring . ':' . $boolstring ) );
-		} else {
-			wp_send_json_error( array( 'message' => "The option 'invitation_link_active' was not updated." ) );
-		}
-
+		$this->update_boolean_option_respond_json( 'invitation_link_active', ( 'true' === $_POST['activate'] ) );
 	}
 
 	/**
@@ -492,12 +489,10 @@ class Spaces_Invitation {
 	public function toggle_self_registration() {
 		check_ajax_referer( 'self_registration' );
 		if ( $this->can_change_self_registration() ) {
-			update_blog_option( null, 'self_registration', ( 'true' === $this->post->get( 'activate' ) ) );
-			wp_die();
+			$this->update_boolean_option_respond_json( 'self_registration', ( 'true' === $this->post->get( 'activate' ) ) );
+		} else {
+			wp_send_json_error( array( 'message' => "You are not allowed to do that." ) );
 		}
-
-		echo esc_html( __( 'You are not allowed to do that.' ) );
-		die();
 	}
 
 
@@ -731,7 +726,7 @@ class Spaces_Invitation {
 					'You become an author in this space and can write posts. You can leave the space again anytime you want.',
 					'defaultspace'
 				),
-				'url'   => $change_url,
+				'url'   => $this->get_full_invitation_link(),
 			)
 		);
 		return $message . $join_button;
@@ -779,16 +774,12 @@ class Spaces_Invitation {
 	}
 
 	/**
-	 * Returns the current url.
+	 * Return a comparator for the current url.
 	 */
 	private function get_current_url() {
-		global $wp;
+		$server = new Spaces_Invitation_Request( $_SERVER );
 
-		if ( '' === get_option( 'permalink_structure' ) ) {
-			return home_url( add_query_arg( array( $_GET ), $wp->request ) );
-		} else {
-			return home_url( trailingslashit( add_query_arg( array( $_GET ), $wp->request ) ) );
-		}
+		return new Spaces_Invitation_Comparable( trim( $server->get( 'WP_HOME' ) . strtok( $server->get( 'REQUEST_URI' ), '?' ), '/' ) );
 	}
 
 	/**
@@ -800,10 +791,12 @@ class Spaces_Invitation {
 
 	/**
 	 * Checks if the current_user is trying to add himself to the current space.
+	 *
+	 * @param Spaces_Invitation_Comparable $current_url Comparator for the current url.
 	 */
-	private function is_trying_to_register() {
+	private function is_trying_to_register( Spaces_Invitation_Comparable $current_url ) {
 		return $this->get->has( 'invitation_link' )
-			&& get_home_url() === $current_url
+			&& $current_url->equals( get_home_url() )
 			&& is_user_logged_in()
 			&& ! is_super_admin();
 	}
@@ -811,10 +804,10 @@ class Spaces_Invitation {
 	/**
 	 * Adds a form to enter the invitation token for the appropriate places.
 	 *
-	 * @param string $current_url The current url of the request.
+	 * @param Spaces_Invitation_Comparable $current_url The current url of the request.
 	 */
-	private function add_invitation_form( string $current_url ) {
-		if ( wp_login_url() === $current_url ) {
+	private function add_invitation_form( Spaces_Invitation_Comparable $current_url ) {
+		if ( $current_url->equals( wp_login_url() ) ) {
 			add_filter( 'privacy_description', array( $this, 'add_form' ) );
 		}
 
@@ -857,13 +850,34 @@ class Spaces_Invitation {
 	/**
 	 * Checks if the user is trying to register and adds a form if not.
 	 *
-	 * @param string $current_url The current url of the request.
+	 * @param Spaces_Invitation_Comparable $current_url The current url of the request.
 	 */
-	private function handle_invitation_link( string $current_url ) {
-		if ( $this->is_trying_to_register() ) {
+	private function handle_invitation_link( Spaces_Invitation_Comparable $current_url ) {
+		if ( $this->is_trying_to_register( $current_url ) ) {
 			$this->try_to_register();
 		} elseif ( ! is_user_member_of_blog() ) {
-			$this->add_invitation_form( $current_url );
+			if ( $this->is_self_registration_enabled() ) {
+				add_filter( 'spaces_invitation_notices', array( $this, 'filter_join_this_space_notice' ) );
+				return;
+			} else {
+				$this->add_invitation_form( $current_url );
+			}
+		}
+	}
+
+	/**
+	 * Updates the given option name with the given bool value and sends a json responds with either a success or failure.
+	 *
+	 * @param string $option_name The option to be updated.
+	 * @param bool $bool_value The value the option should become.
+	 */
+	private function update_boolean_option_respond_json( string $option_name, bool $bool_value ) {
+		$updated = update_option( $option_name, (string) $bool_value );
+		if ( $updated ) {
+			$boolstring = $bool_value ? 'true' : 'false';
+			wp_send_json( array( 'message' => 'The option "' . $option_name . '" is now ' . $boolstring ) );
+		} else {
+			wp_send_json_error( array( 'message' => 'The option "' . $option_name . '" was not updated.' ) );
 		}
 	}
 }

@@ -38,7 +38,7 @@ class Spaces_Invitation_Request {
 	 * @return bool
 	 */
 	public function has( string $key ) {
-		return isset( $this->array, $key );
+		return isset( $this->array[ $key ] );
 	}
 
 	/**

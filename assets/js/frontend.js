@@ -6,8 +6,10 @@
 
 jQuery(function($) {
     var Void = function(){};
+    var always = function(value){return function(){return value;};};
     var dummySwitch = {toggle: Void, enable: Void, disable: Void};
-    var createSwitch = function(label, toggleClass, endpoint){
+    var createSwitch = function(label, toggleClass, endpoint, preventClick){
+        preventClick = preventClick || always(false);
         var toggle = label.querySelector(toggleClass);
         var input = label.querySelector('input.switch-input');
         var state = !input.getAttribute('data-checked');
@@ -31,7 +33,7 @@ jQuery(function($) {
         };
 
         label.addEventListener('click', function(){toggle.click();});
-        toggle.addEventListener('click', function(e){e.target === toggle && toggleFn();});
+        toggle.addEventListener('click', function(e){e.target === toggle && !preventClick(label) && toggleFn();});
         toggleFn();
 
         return {
@@ -88,14 +90,15 @@ jQuery(function($) {
     };
     
     return function() {
-        var invitationSwitch = dummySwitch;
+        var invitationSwitch   = dummySwitch;
         var registrationSwitch = dummySwitch;
+        var invitationLabel = document.querySelector('.invitation-label');
+        var registrationLabel = document.querySelector('.self-registration-label');
         var invitationEndpoint = wrapEndpointWithTextUpdate(
             document.querySelector('.invitation-label .invitation-text'),
             createSimpleEndpoint(INVITATION_ADMIN_URL.url, 'invitation_link', 'activate', INVITATION_NONCES.invitation_link),
             INVITATION_TEXT_OPTIONS.invitation,
             function(enable){
-                enable && registrationSwitch.disable();
                 var method = enable ? 'remove' : 'add';
                 Array.from(document.querySelectorAll('.spaces-invitation-box')).forEach(function(node){
                     node.classList[method]('link-disabled');
@@ -107,25 +110,21 @@ jQuery(function($) {
             createSimpleEndpoint(INVITATION_ADMIN_URL.url, 'self_registration', 'activate', INVITATION_NONCES.self_registration),
             INVITATION_TEXT_OPTIONS.self_registration,
             function(enable){
-                enable && invitationSwitch.disable();
+                invitationLabel && invitationLabel.classList[enable ? 'add' : 'remove']('no-toggle');
+                if(enable)
+                {
+                    invitationSwitch.enable();
+                }
             }
         );
-        var invitationLabel = document.querySelector('.invitation-label');
-        var registrationLabel = document.querySelector('.self-registration-label');
         var createInvitationSwitch = function(){
-            return createSwitch(invitationLabel, '.invitation-toggle', invitationEndpoint);
+            return createSwitch(invitationLabel, '.invitation-toggle', invitationEndpoint, function(label){
+                return label.classList.contains('no-toggle');
+            });
         };
         if(invitationLabel)
         {
-            if(!invitationLabel.classList.contains('no-toggle'))
-            {
-                invitationSwitch = createInvitationSwitch();
-            }
-            else
-            {
-                var checked = !invitationLabel.querySelector('input.switch-input').getAttribute('checked');
-                document.querySelector('.invitation-label .invitation-text').textContent = INVITATION_TEXT_OPTIONS.invitation[checked];
-            }
+            invitationSwitch = createInvitationSwitch();
         }
         if(!registrationLabel)
         {
@@ -136,28 +135,7 @@ jQuery(function($) {
         (document.querySelector('.invitation-link') || {addEventListener: Void}).addEventListener('click', function(){
             this.select();
         });
-        var updateInvitationSwitch = !invitationLabel ? Void : function(privacy){
-            if([-1, -2].includes(privacy))
-            {
-                if(invitationSwitch === dummySwitch)
-                {
-                    invitationSwitch = createInvitationSwitch();
-                }
-                invitationLabel.classList.remove('no-toggle');
-                invitationLabel.parentNode.classList.remove('invitation-hide');
-            }
-            else
-            {
-                invitationLabel.classList.add('no-toggle');
-                if(!invitationSwitch.isEnabled())
-                {
-                    invitationLabel.parentNode.classList.add('invitation-hide');
-                }
-            }
-        };
         document.addEventListener("spacePrivacyChanged", function (event) {
-            console.log('spaces privacy changed');
-            updateInvitationSwitch(event.detail.privacy);
             if(-2 === event.detail.privacy)
             {
                 registrationLabel.classList.add('private');
