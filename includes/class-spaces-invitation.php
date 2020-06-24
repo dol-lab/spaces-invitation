@@ -823,7 +823,6 @@ class Spaces_Invitation {
 	 * @param Spaces_Invitation_Comparable $current_url The current url of the request.
 	 */
 	private function handle_invitation_link( Spaces_Invitation_Comparable $current_url ) {
-		error_log( 'aif ' . print_r( $current_url, true ) );
 		if ( $this->is_trying_to_register( $current_url ) ) {
 			$this->try_to_register();
 		} elseif ( ! is_user_member_of_blog() ) {
