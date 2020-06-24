@@ -169,8 +169,8 @@ class Spaces_Invitation {
 
 		add_action( 'wp_ajax_invitation_link', array( $this, 'ajax_toggle_invitation_link' ) );
 		add_action( 'wp_ajax_nopriv_invitation_link', array( $this, 'ajax_toggle_invitation_link' ) );
-		add_action( 'wp_ajax_self_registration', array( $this, 'toggle_self_registration' ) );
-		add_action( 'wp_ajax_nopriv_self_registration', array( $this, 'toggle_self_registration' ) );
+		add_action( 'wp_ajax_self_registration', array( $this, 'ajax_toggle_self_registration' ) );
+		add_action( 'wp_ajax_nopriv_self_registration', array( $this, 'ajax_toggle_self_registration' ) );
 		add_action( 'wp_ajax_invitation_update_token', array( $this, 'update_token' ) );
 
 		$this->load_plugin_textdomain();// Handle localisation.
@@ -190,7 +190,7 @@ class Spaces_Invitation {
 	 */
 	public function add_settings_item( $settings_items ) {
 		if ( $this->can_change_invitation_options() ) {
-			$is_self_registration_enabled = $this->is_self_registration_enabled();
+			$is_self_registration_enabled = apply_filters( 'is_self_registration_enabled', false );
 			$is_private_or_community      = $this->blog_is_private_or_community();
 			$link_enabled                 = $this->is_invitation_link_enabled();
 			$link                         = $this->get_full_invitation_link();
@@ -443,18 +443,20 @@ class Spaces_Invitation {
 
 	/**
 	 * Checks if users can become an author in the current space.
+	 * Don't call this function directly but with the filter: apply_filters( 'is_self_registration_enabled', false ).
 	 *
-	 * @return bool  return true if the current space is open and users can join on their own
+	 * @return bool return true if the current space is open and users can join on their own
 	 */
 	public function is_self_registration_enabled() {
-		return get_option( 'self_registration' );
+		// return false;
+		return get_option( 'self_registration', false );
 	}
 
 	/**
 	 * This function is called when the ajax call for 'self_registration' is called.
 	 * The function never returns.
 	 */
-	public function toggle_self_registration() {
+	public function ajax_toggle_self_registration() {
 		check_ajax_referer( 'self_registration' );
 		if ( $this->can_change_self_registration() ) {
 			$this->update_boolean_option_respond_json( 'self_registration', ( 'true' === $this->post->get( 'activate' ) ) );
@@ -611,7 +613,7 @@ class Spaces_Invitation {
 	 * @return array
 	 */
 	private function self_registration_build_item() {
-		$enabled        = $this->is_self_registration_enabled();
+		$enabled        = apply_filters( 'is_self_registration_enabled', false );
 		$enabled_stirng = esc_html( __( $enabled ? 'enabled' : 'disabled' ) );
 
 		return array(
@@ -821,10 +823,11 @@ class Spaces_Invitation {
 	 * @param Spaces_Invitation_Comparable $current_url The current url of the request.
 	 */
 	private function handle_invitation_link( Spaces_Invitation_Comparable $current_url ) {
+		error_log( 'aif ' . print_r( $current_url, true ) );
 		if ( $this->is_trying_to_register( $current_url ) ) {
 			$this->try_to_register();
 		} elseif ( ! is_user_member_of_blog() ) {
-			if ( $this->is_self_registration_enabled() ) {
+			if ( apply_filters( 'is_self_registration_enabled', false ) ) {
 				add_filter( 'spaces_invitation_notices', array( $this, 'filter_join_this_space_notice' ) );
 				return;
 			} else {
