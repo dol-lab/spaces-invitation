@@ -478,7 +478,7 @@ class Spaces_Invitation {
 			'form',
 			array(
 				'home_url' => get_home_url(),
-				'message'  => esc_html( __( 'Enter this space with an invitation link:' ) ),
+				'message'  => esc_html( __( 'Enter this space with password:' ) ),
 			)
 		);
 	}
