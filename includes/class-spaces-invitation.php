@@ -319,8 +319,8 @@ class Spaces_Invitation {
 			'INVITATION_TEXT_OPTIONS',
 			array(
 				'invitation'        => array(
-					'true'  => 'Invitation Link enabled',
-					'false' => 'Invitation Link disabled',
+					'true'  => 'Invitation Link and Password enabled',
+					'false' => 'Invitation Link and Password disabled',
 				),
 				'self_registration' => array(
 					'true'  => 'Self Registration enabled',
@@ -621,9 +621,10 @@ class Spaces_Invitation {
 			'html' => $this->render(
 				'self_registration',
 				array(
-					'text'             => $enabled_stirng,
-					'enabled'          => $enabled,
-					'is_private_class' => $this->blog_is_private() ? 'private' : '',
+					'text'                   => $enabled_stirng,
+					'enabled'                => $enabled,
+					'is_private_class'       => $this->blog_is_private() ? 'private' : '',
+					'self_registration_text' => esc_html( __( 'Self-registration can not be enabled in private spaces.' ) )
 				)
 			),
 		);
@@ -823,6 +824,7 @@ class Spaces_Invitation {
 	 * @param Spaces_Invitation_Comparable $current_url The current url of the request.
 	 */
 	private function handle_invitation_link( Spaces_Invitation_Comparable $current_url ) {
+		// var_dump($this->is_trying_to_register( $current_url ), ! is_user_member_of_blog(), apply_filters( 'is_self_registration_enabled', false ));exit;
 		if ( $this->is_trying_to_register( $current_url ) ) {
 			$this->try_to_register();
 		} elseif ( ! is_user_member_of_blog() ) {

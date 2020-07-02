@@ -175,7 +175,7 @@ jQuery(function($) {
                 var value = input.value;
                 saveLinkEndpoint(value).then(function(response){
                     node.remove();
-                    document.querySelector('.invitation-link').textContent = response.link;
+                    document.querySelector('.invitation-link').value = response.link;
                     currentToken = value;
                 });
             });

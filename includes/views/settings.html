@@ -11,9 +11,11 @@
     <span data-tooltip aria-haspopup="true" class="has-tip" data-disable-hover="false" tabindex="1" title="Press Ctrl+C to copy.">
         <input class="invitation-link" type="text" value="{{ link }}" readonly="true" />
     </span>
-    <i class="fa fa-edit invitation-edit-link"></i>
+    <span data-tooltip aria-haspopup="true" class="has-tip" data-disable-hover="false" tabindex="1" title="change Password">
+        <i class="fa fa-edit invitation-edit-link"></i>
+    </span>
 </div>
 <div class="spaces-invitation-box {{ link_enabled_class }}">
-    User who click on the Invitation link will be added with the role {{ default_role }}.
+    Users who click on the invitation link or enter the space via Password will be added with the role {{ default_role }}. Changing the Password will change the inivitation link.
 </div>
 
