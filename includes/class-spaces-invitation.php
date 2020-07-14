@@ -159,7 +159,6 @@ class Spaces_Invitation {
 		register_activation_hook( $this->file, array( $this, 'install' ) );
 
 		add_filter( 'default_space_setting', array( $this, 'add_settings_item' ) );
-		add_filter( 'privacy_description', array( $this, 'invalid_invitation_link' ) );
 
 		// Load frontend JS & CSS.
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_styles' ), 10 );
@@ -229,12 +228,10 @@ class Spaces_Invitation {
 	 * @param string $description The already existing description.
 	 * @return string
 	 */
-	public function invalid_invitation_link( $description ) {
+	public function invalid_invitation_link() {
 		if ( $this->get->get( 'src' ) === 'invitation' ) {
-			$text = esc_html( __( 'Sorry... The invitation link you used is not (or no longer) valid.' ) );
-			return "<strong>$text</strong><br/>$description";
+			return esc_html__( 'The password or invitation-link you used is not (or no longer) valid.' );
 		}
-		return $description;
 	}
 
 	/**
@@ -465,24 +462,50 @@ class Spaces_Invitation {
 		}
 	}
 
+	 /**
+	  * Return fields for templating password form fields (frontend & backend)
+	  *
+	  * @return array[]
+	  */
+	private function get_password_form_data() {
+		return array(
+			'class' => '',
+			'error' => $this->invalid_invitation_link(),
+			'home_url' => get_home_url(),
+			'message'  => esc_html__( 'Join this space with a password', 'spaces-invitation' ),
+			'placeholder' => esc_attr__( 'Password', 'spaces-invitation' ),
+			'button_text' => esc_html__( 'Join', 'spaces-invitation' ),
+		);
+	}
 
 	/**
-	 * Add a form fot the pivacy_description.
+	 * Adds a password-form to the frontend-view.
 	 *
-	 * @param string $message The filter parameter of pivacy_description.
-	 *
-	 * @return string
+	 * @param string $message
+	 * @return void
 	 */
-	public function add_form( string $message ) {
-		return $message . $this->render(
-			'form',
-			array(
-				'home_url' => get_home_url(),
-				'message'  => esc_html__( 'Join this space with a password', 'spaces-invitation' ),
-				'placeholder' => esc_attr__( 'Password', 'spaces-invitation' ),
-				'button_text' => esc_html__( 'Join', 'spaces-invitation' ),
-			)
-		);
+	public function add_password_form_frontend( string $message ) {
+		$form_data = $this->get_password_form_data();
+		error_log( 'froootnet!' );
+		return $message . $this->render( 'password_form_frontend', $form_data );
+	}
+
+	/**
+	 * Add a form to the backend-view
+	 *
+	 * @param array $message The filter parameter of more_privacy_custom_login_form.
+	 *
+	 * @return array
+	 */
+	public function add_password_form_backend( array $message ) {
+		$form_data = $this->get_password_form_data();
+		if ( ! empty( $form_data['error'] ) ) {
+			$form_data['error'] = "<div class='message error' id='login_error'>{$form_data['error']}</div>";
+			$form_data['class'] = 'shake';
+		}
+		$form = $this->render( 'password_form_backend', $form_data );
+		array_splice( $message, 1, 0, $form );
+		return $message;
 	}
 
 	/**
@@ -781,23 +804,9 @@ class Spaces_Invitation {
 	 */
 	private function add_invitation_form( Spaces_Invitation_Comparable $current_url ) {
 		if ( $current_url->equals( wp_login_url() ) ) {
-			add_filter( 'privacy_description', array( $this, 'add_form' ) );
+			add_filter( 'more_privacy_custom_login_form', array( $this, 'add_password_form_backend' ) );
 		}
-
-		add_filter(
-			'spaces_invitation_notices',
-			function( $message ) {
-				return $message . $this->render(
-					'invitation_form',
-					array(
-						'home_url' => get_home_url(),
-						'message'  => esc_html__( 'Join this space with a password', 'spaces-invitation' ),
-						'placeholder' => esc_attr__( 'Password', 'spaces-invitation' ),
-						'button_text' => esc_html__( 'Join', 'spaces-invitation' ),
-					)
-				);
-			}
-		);
+		add_filter( 'spaces_invitation_notices', array( $this, 'add_password_form_frontend' ) );
 	}
 
 	/**
