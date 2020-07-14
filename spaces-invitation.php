@@ -7,9 +7,8 @@
  * Author URI: https://github.com/dol-lab
  * Requires at least: 5.0
  * Tested up to: 5.0
- *
  * Text Domain: spaces-invitation
- * Domain Path: /lang/
+ * Domain Path: /lang
  *
  * @package WordPress
  * @since 1.0.0
@@ -23,7 +22,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once __DIR__ . '/includes/class-spaces-invitation-comparable.php';
 require_once __DIR__ . '/includes/class-spaces-invitation-request.php';
 require_once __DIR__ . '/includes/class-spaces-invitation.php';
-require_once __DIR__ . '/includes/class-spaces-invitation-settings.php'; // might be nice to have some settings in the backend like renewing invite-links.
 
 // require_once __DIR__ . '/includes/class-spaces-invite-link'; // access class functions via spaces_invitation()->invite_link->...
 
