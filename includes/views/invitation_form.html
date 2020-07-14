@@ -1,5 +1,7 @@
-<form method="GET" action="{{ home_url }}">
-    <div><strong>{{ message }}</strong></div>
-    <input placeholder="Invitation link" name="invitation_link" type="password"/>
-    <button class="button expanded" type="submit">Enter</button>
-</form>
+<div class="card cell">
+	<form method="GET" action="{{ home_url }}">
+		<div class="card-title padding-button">{{ message }}</div>
+		<input placeholder="{{ placeholder }}" name="invitation_link" type="password" />
+		<button class="button success expanded" type="submit">{{ button_text }}</button>
+	</form>
+</div>

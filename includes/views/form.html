@@ -1,7 +1,7 @@
 <div>
     <p><strong>{{ message }}</strong></p>
-    <input class="invitation-link-field" placeholder="Passwort" name="invitation_link" type="password"/>
-    <button class="button expanded" type="submit">Enter</button>
+    <input class="invitation-link-field" placeholder="{{ placeholder }}" name="invitation_link" type="password"/>
+    <button class="button expanded" type="submit">{{ button_text }}</button>
     <script type="text/javascript">
      window.addEventListener('load', function(){
          var loginForm = document.querySelector('#loginform');

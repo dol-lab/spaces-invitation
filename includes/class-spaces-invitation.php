@@ -478,7 +478,9 @@ class Spaces_Invitation {
 			'form',
 			array(
 				'home_url' => get_home_url(),
-				'message'  => esc_html( __( 'Enter this space with password:' ) ),
+				'message'  => esc_html__( 'Join this space with a password', 'spaces-invitation' ),
+				'placeholder' => esc_attr__( 'Password', 'spaces-invitation' ),
+				'button_text' => esc_html__( 'Join', 'spaces-invitation' ),
 			)
 		);
 	}
@@ -624,7 +626,7 @@ class Spaces_Invitation {
 					'text'                   => $enabled_stirng,
 					'enabled'                => $enabled,
 					'is_private_class'       => $this->blog_is_private() ? 'private' : '',
-					'self_registration_text' => esc_html( __( 'Self-registration can not be enabled in private spaces.' ) )
+					'self_registration_text' => esc_html( __( 'Self-registration can not be enabled in private spaces.' ) ),
 				)
 			),
 		);
@@ -789,7 +791,9 @@ class Spaces_Invitation {
 					'invitation_form',
 					array(
 						'home_url' => get_home_url(),
-						'message'  => esc_html( __( 'Enter this space with an invitation link:' ) ),
+						'message'  => esc_html__( 'Join this space with a password', 'spaces-invitation' ),
+						'placeholder' => esc_attr__( 'Password', 'spaces-invitation' ),
+						'button_text' => esc_html__( 'Join', 'spaces-invitation' ),
 					)
 				);
 			}
