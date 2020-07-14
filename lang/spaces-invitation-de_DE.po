@@ -1,0 +1,87 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Spaces Invitation\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-07-14 23:46+0000\n"
+"PO-Revision-Date: 2020-07-14 23:46+0000\n"
+"Last-Translator: ifs admin\n"
+"Language-Team: Deutsch\n"
+"Language: de_DE\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.4.0; wp-5.4.2"
+
+#: includes/class-spaces-invitation.php:248
+msgid "Welcome! You successfully joined this Space."
+msgstr "Willkommen! Sie sind diesem Space erfolgreich beigetreten."
+
+#: includes/class-spaces-invitation.php:438
+msgid "You are not allowed to do that."
+msgstr "Du darfst das nicht."
+
+#: includes/class-spaces-invitation.php:480
+msgid "Join this space with a password"
+msgstr "Mit Passwort beitreten"
+
+#: includes/class-spaces-invitation.php:481
+msgid "Password"
+msgstr "Passwort"
+
+#: includes/class-spaces-invitation.php:482
+msgid "Join"
+msgstr "Beitreten"
+
+#: includes/class-spaces-invitation.php:649
+msgid "enabled"
+msgstr "aktiviert"
+
+#: includes/class-spaces-invitation.php:649
+msgid "disabled"
+msgstr "deaktiviert"
+
+#: includes/class-spaces-invitation.php:659
+msgid "Self-registration can not be enabled in private spaces."
+msgstr "Selbstregistrierung kann in privaten Spaces nicht aktiviert werden."
+
+#: includes/class-spaces-invitation.php:701
+msgid ""
+"You are currently logged in as a super-admin. Please use a regular account "
+"to collaborate."
+msgstr ""
+"Sie sind derzeit als Superadministrator angemeldet. Bitte verwenden Sie ein "
+"reguläres Konto, um sich im Space zu beteiligen."
+
+#: includes/class-spaces-invitation.php:733
+msgid "Join this space"
+msgstr "Diesem Raum beitreten"
+
+#: includes/class-spaces-invitation.php:734
+msgid ""
+"You become an author in this space and can write posts. You can leave the "
+"space again anytime you want."
+msgstr ""
+"Sie werden Autor in diesem Space und können Beiträge schreiben. Sie können "
+"den Raum jederzeit wieder verlassen."
+
+#: includes/class-spaces-invitation.php:777
+msgid "Leave Space"
+msgstr "Diesen Space verlassen"
+
+#. Name of the plugin
+msgid "Spaces Invitation"
+msgstr "Space Einladung"
+
+#. Description of the plugin
+msgid "Manages Invitations to Spaces."
+msgstr "Verwaltet Einladungen zu Räumen."
+
+#. URI of the plugin
+msgid "https://github.com/dol-lab/spaces-invitation"
+msgstr "https://github.com/dol-lab/spaces-invitation"
+
+#. Author URI of the plugin
+msgid "https://github.com/dol-lab"
+msgstr "https://github.com/dol-lab"

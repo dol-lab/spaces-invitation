@@ -242,7 +242,12 @@ class Spaces_Invitation {
 		$current_url = $this->get_current_url();
 
 		if ( $this->get->get( 'invitation' ) === 'success' ) {
-			add_filter( 'spaces_invitation_notices', $this->callout( 'You successfully joined this space' ) );
+			add_filter(
+				'spaces_invitation_notices',
+				$this->callout(
+					esc_html__( 'Welcome! You successfully joined this Space.', 'spaces-invitation' )
+				)
+			);
 			return;
 		}
 
@@ -397,7 +402,7 @@ class Spaces_Invitation {
 	 * @since 1.0.0
 	 */
 	public function __clone() {
-		_doing_it_wrong( __FUNCTION__, esc_html( __( 'Cloning of Spaces_Invitation is forbidden' ) ), esc_attr( $this->_version ) );
+		_doing_it_wrong( __FUNCTION__, esc_html( 'Cloning of Spaces_Invitation is forbidden' ), esc_attr( $this->_version ) );
 
 	} // End __clone ()
 
@@ -407,7 +412,7 @@ class Spaces_Invitation {
 	 * @since 1.0.0
 	 */
 	public function __wakeup() {
-		_doing_it_wrong( __FUNCTION__, esc_html( __( 'Unserializing instances of Spaces_Invitation is forbidden' ) ), esc_attr( $this->_version ) );
+		_doing_it_wrong( __FUNCTION__, esc_html( 'Unserializing instances of Spaces_Invitation is forbidden' ), esc_attr( $this->_version ) );
 	} // End __wakeup ()
 
 	/**
@@ -485,8 +490,10 @@ class Spaces_Invitation {
 	 * @return void
 	 */
 	public function add_password_form_frontend( string $message ) {
+		if ( $this->superadmin_notice() ) {
+			return $message . $this->superadmin_notice();
+		}
 		$form_data = $this->get_password_form_data();
-		error_log( 'froootnet!' );
 		return $message . $this->render( 'password_form_frontend', $form_data );
 	}
 
@@ -639,17 +646,17 @@ class Spaces_Invitation {
 	 */
 	private function self_registration_build_item() {
 		$enabled        = apply_filters( 'is_self_registration_enabled', false );
-		$enabled_stirng = esc_html( __( $enabled ? 'enabled' : 'disabled' ) );
+		$enabled_string = $enabled ? esc_html__( 'enabled', 'spaces-invitation' ) : esc_html__( 'disabled', 'spaces-invitation' );
 
 		return array(
 			'id'   => 'self-registration-item',
 			'html' => $this->render(
 				'self_registration',
 				array(
-					'text'                   => $enabled_stirng,
+					'text'                   => $enabled_string,
 					'enabled'                => $enabled,
 					'is_private_class'       => $this->blog_is_private() ? 'private' : '',
-					'self_registration_text' => esc_html( __( 'Self-registration can not be enabled in private spaces.' ) ),
+					'self_registration_text' => esc_html__( 'Self-registration can not be enabled in private spaces.', 'spaces-invitation' ),
 				)
 			),
 		);
@@ -686,41 +693,47 @@ class Spaces_Invitation {
 	}
 
 	/**
-	 * Filter for spaces_invitation_notices.
-	 *
-	 * @param string $message The filter argument from spaces_invitation_notices.
+	 * Superadmins don't get a "join this space" - button or a password field.
 	 */
-	public function filter_join_this_space_notice( $message ) {
-		$change_url = add_query_arg( 'join', 'true', ds_get_current_url() );
-
-		/**
-		 * Superadmins don't get a "join this space" - button.
-		 */
+	public function superadmin_notice() {
 		if ( is_super_admin() ) {
 			if ( ! is_user_member_of_blog() ) {
-				$callout_message = esc_html__( 'You are currently logged in as a super-admin. Please use a regular account to collaborate.', 'defaultspace' );
-				$callout         = $this->render(
+				$callout_message = esc_html__(
+					'You are currently logged in as a super-admin. Please use a regular account to collaborate.',
+					'spaces-invitation'
+				);
+				return $this->render(
 					'callout',
 					array(
 						'message' => $callout_message,
 						'type'    => 'warning',
 					)
 				);
-				return $message . $callout;
+
 			}
 			return; // superadmin is already a member.
 		}
+	}
 
+	/**
+	 * Filter for spaces_invitation_notices.
+	 *
+	 * @param string $message The filter argument from spaces_invitation_notices.
+	 */
+	public function filter_join_this_space_notice( $message ) {
+		if ( $this->superadmin_notice() ) {
+			return $message . $this->superadmin_notice();
+		}
 		/**
 		 * @todo: add title
 		 */
 		$join_button = $this->render(
 			'join',
 			array(
-				'label' => esc_html__( 'Join this space' ),
+				'label' => esc_html__( 'Join this space', 'spaces-invitation' ),
 				'title' => esc_html__(
 					'You become an author in this space and can write posts. You can leave the space again anytime you want.',
-					'defaultspace'
+					'spaces-invitation'
 				),
 				'url'   => $this->get_full_invitation_link(),
 			)
@@ -761,7 +774,7 @@ class Spaces_Invitation {
 				'html' => $this->render(
 					'leave_space',
 					array(
-						'text' => __( 'Leave Space' ),
+						'text' => __( 'Leave Space', 'spaces-invitation' ),
 						'url'  => get_home_url() . '?leave_space=true',
 					)
 				),
