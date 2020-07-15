@@ -261,6 +261,14 @@ Changing the Password will change the inivitation link.',
 				)
 			);
 			return;
+		} elseif ( $this->get->get( 'invitation' ) === 'failed' ) {
+			add_filter(
+				'spaces_invitation_notices',
+				$this->callout(
+					esc_html__( 'Wrong password.', 'spaces-invitation' ),
+					'alert'
+				)
+			);
 		}
 
 		if ( $this->get->get( 'leave_space' ) === 'true' && $current_url->equals( get_home_url() ) ) {
@@ -836,10 +844,16 @@ Changing the Password will change the inivitation link.',
 
 	/**
 	 * Try to register the current user to the current space.
+	 *
+	 * @param Spaces_Invitation_Comparable $current_url
 	 */
-	private function try_to_register() {
+	private function try_to_register( Spaces_Invitation_Comparable $current_url ) {
 		if ( get_option( 'invitation_link' ) !== $this->get->get( 'invitation_link' ) ) { // queryvar matches blog setting.
-			header( 'Location: ' . get_home_url() . '/wp-login.php?action=privacy&src=invitation' );
+			if ( $current_url->equals( wp_login_url() ) ) {
+				header( 'Location: ' . get_home_url() . '/wp-login.php?action=privacy&src=invitation' );
+				exit;
+			}
+			header( 'Location: ' . get_home_url() . '?invitation=failed' );
 			exit;
 		}
 
@@ -864,7 +878,7 @@ Changing the Password will change the inivitation link.',
 	private function handle_invitation_link( Spaces_Invitation_Comparable $current_url ) {
 		// var_dump($this->is_trying_to_register( $current_url ), ! is_user_member_of_blog(), apply_filters( 'is_self_registration_enabled', false ));exit;
 		if ( $this->is_trying_to_register( $current_url ) ) {
-			$this->try_to_register();
+			$this->try_to_register( $current_url );
 		} elseif ( ! is_user_member_of_blog() ) {
 			if ( apply_filters( 'is_self_registration_enabled', false ) ) {
 				add_filter( 'spaces_invitation_notices', array( $this, 'filter_join_this_space_notice' ) );
