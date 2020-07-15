@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Spaces Invitation\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-07-14 23:46+0000\n"
-"PO-Revision-Date: 2020-07-14 23:46+0000\n"
+"POT-Creation-Date: 2020-07-15 02:44+0000\n"
+"PO-Revision-Date: 2020-07-15 02:44+0000\n"
 "Last-Translator: ifs admin\n"
 "Language-Team: Deutsch\n"
 "Language: de_DE\n"
@@ -14,39 +14,77 @@ msgstr ""
 "X-Generator: Loco https://localise.biz/\n"
 "X-Loco-Version: 2.4.0; wp-5.4.2"
 
-#: includes/class-spaces-invitation.php:248
+#. %1 contains the name of a role (author by default).
+#: includes/class-spaces-invitation.php:201
+#, php-format
+#| "Users who click on the invitation link or enter the space via Password "
+#| "will be added with the role \"%1$s\".\n"
+#| "Changing the Password will change the inivitation link."
+msgid ""
+"Users who click on the invitation link or enter the space via Password will "
+"be added with the role \"%s\".\n"
+"Changing the Password will change the inivitation link."
+msgstr ""
+"Benutzer*innen, die den Space betreten bekommen die Rolle \"%s\". Eine "
+"Änderung des Passworts verändert auch den Einladungslink."
+
+#: includes/class-spaces-invitation.php:220
+msgid "Press Ctrl+C to copy."
+msgstr "Strg+C zum Kopieren."
+
+#: includes/class-spaces-invitation.php:221
+msgid "Change Password"
+msgstr "Passwort ändern"
+
+#: includes/class-spaces-invitation.php:260
 msgid "Welcome! You successfully joined this Space."
 msgstr "Willkommen! Sie sind diesem Space erfolgreich beigetreten."
 
-#: includes/class-spaces-invitation.php:438
+#: includes/class-spaces-invitation.php:336
+msgid "Invitation Link and Password enabled"
+msgstr "Einladungslink und Passwort aktiviert."
+
+#: includes/class-spaces-invitation.php:337
+msgid "Invitation Link and Password disabled"
+msgstr "Einladungslink und Passwort deaktiviert."
+
+#: includes/class-spaces-invitation.php:340
+msgid "Self Registration enabled"
+msgstr "Selbstregistrierung aktiviert."
+
+#: includes/class-spaces-invitation.php:341
+msgid "Self Registration disabled"
+msgstr "Selbstregistrierung deaktiviert."
+
+#: includes/class-spaces-invitation.php:450
 msgid "You are not allowed to do that."
 msgstr "Du darfst das nicht."
 
-#: includes/class-spaces-invitation.php:480
+#: includes/class-spaces-invitation.php:492
 msgid "Join this space with a password"
 msgstr "Mit Passwort beitreten"
 
-#: includes/class-spaces-invitation.php:481
+#: includes/class-spaces-invitation.php:493
 msgid "Password"
 msgstr "Passwort"
 
-#: includes/class-spaces-invitation.php:482
+#: includes/class-spaces-invitation.php:494
 msgid "Join"
 msgstr "Beitreten"
 
-#: includes/class-spaces-invitation.php:649
+#: includes/class-spaces-invitation.php:661
 msgid "enabled"
 msgstr "aktiviert"
 
-#: includes/class-spaces-invitation.php:649
+#: includes/class-spaces-invitation.php:661
 msgid "disabled"
 msgstr "deaktiviert"
 
-#: includes/class-spaces-invitation.php:659
+#: includes/class-spaces-invitation.php:671
 msgid "Self-registration can not be enabled in private spaces."
 msgstr "Selbstregistrierung kann in privaten Spaces nicht aktiviert werden."
 
-#: includes/class-spaces-invitation.php:701
+#: includes/class-spaces-invitation.php:713
 msgid ""
 "You are currently logged in as a super-admin. Please use a regular account "
 "to collaborate."
@@ -54,11 +92,11 @@ msgstr ""
 "Sie sind derzeit als Superadministrator angemeldet. Bitte verwenden Sie ein "
 "reguläres Konto, um sich im Space zu beteiligen."
 
-#: includes/class-spaces-invitation.php:733
+#: includes/class-spaces-invitation.php:745
 msgid "Join this space"
 msgstr "Diesem Raum beitreten"
 
-#: includes/class-spaces-invitation.php:734
+#: includes/class-spaces-invitation.php:746
 msgid ""
 "You become an author in this space and can write posts. You can leave the "
 "space again anytime you want."
@@ -66,7 +104,7 @@ msgstr ""
 "Sie werden Autor in diesem Space und können Beiträge schreiben. Sie können "
 "den Raum jederzeit wieder verlassen."
 
-#: includes/class-spaces-invitation.php:777
+#: includes/class-spaces-invitation.php:789
 msgid "Leave Space"
 msgstr "Diesen Space verlassen"
 

@@ -195,7 +195,16 @@ class Spaces_Invitation {
 			$link                         = $this->get_full_invitation_link();
 			$toggle_button_class          = $is_self_registration_enabled ? 'no-toggle' : '';
 			$link_enabled_class           = $link_enabled ? '' : 'link-disabled';
-			$default_role                 = get_option( 'default_role' );
+			$default_role                 = translate_user_role( get_option( 'default_role' ) );
+			// translators: %1 contains the name of a role (author by default).
+			$description = sprintf(
+				esc_html__(
+					'Users who click on the invitation link or enter the space via Password will be added with the role "%s".
+Changing the Password will change the inivitation link.',
+					'spaces-invitation'
+				),
+				$default_role
+			);
 
 			$item = array(
 				'id'   => 'invitation-item',
@@ -207,6 +216,9 @@ class Spaces_Invitation {
 						'toggle_button_class' => $toggle_button_class,
 						'default_role'        => $default_role,
 						'link_enabled_class'  => $link_enabled_class,
+						'description_text' => $description,
+						'copy_text' => esc_html__( 'Press Ctrl+C to copy.', 'spaces-invitation' ),
+						'change_password_text' => esc_html__( 'Change Password', 'spaces-invitation' ),
 					)
 				),
 			);
@@ -321,12 +333,12 @@ class Spaces_Invitation {
 			'INVITATION_TEXT_OPTIONS',
 			array(
 				'invitation'        => array(
-					'true'  => 'Invitation Link and Password enabled',
-					'false' => 'Invitation Link and Password disabled',
+					'true'  => esc_html__( 'Invitation Link and Password enabled', 'spaces-invitation' ),
+					'false' => esc_html__( 'Invitation Link and Password disabled', 'spaces-invitation' ),
 				),
 				'self_registration' => array(
-					'true'  => 'Self Registration enabled',
-					'false' => 'Self Registration disabled',
+					'true'  => esc_html__( 'Self Registration enabled', 'spaces-invitation' ),
+					'false' => esc_html__( 'Self Registration disabled', 'spaces-invitation' ),
 				),
 			)
 		);
