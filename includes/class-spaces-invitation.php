@@ -241,9 +241,13 @@ Changing the Password will change the inivitation link.',
 	 * @return string
 	 */
 	public function invalid_invitation_link() {
-		if ( $this->get->get( 'src' ) === 'invitation' ) {
-			return esc_html__( 'The password or invitation-link you used is not (or no longer) valid.' );
+		if ( $this->get->get( 'invitation' ) === 'failed' ) {
+			return $this->get_invalid_invitation_link_message();
 		}
+	}
+
+	private function get_invalid_invitation_link_message() {
+		return esc_html__( 'The password or invitation-link you used is not (or no longer) valid.' );
 	}
 
 	/**
@@ -265,7 +269,7 @@ Changing the Password will change the inivitation link.',
 			add_filter(
 				'spaces_invitation_notices',
 				$this->callout(
-					esc_html__( 'Wrong password.', 'spaces-invitation' ),
+					$this->get_invalid_invitation_link_message(),
 					'alert'
 				)
 			);
@@ -849,8 +853,8 @@ Changing the Password will change the inivitation link.',
 	 */
 	private function try_to_register( Spaces_Invitation_Comparable $current_url ) {
 		if ( get_option( 'invitation_link' ) !== $this->get->get( 'invitation_link' ) ) { // queryvar matches blog setting.
-			if ( $current_url->equals( wp_login_url() ) ) {
-				header( 'Location: ' . get_home_url() . '/wp-login.php?action=privacy&src=invitation' );
+			if ( $this->get->get('src') === 'login' ) {
+				header( 'Location: ' . get_home_url() . '/wp-login.php?action=privacy&src=invitation&invitation=failed' );
 				exit;
 			}
 			header( 'Location: ' . get_home_url() . '?invitation=failed' );
