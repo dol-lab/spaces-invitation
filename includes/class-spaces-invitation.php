@@ -795,6 +795,7 @@ Changing the Password will change the inivitation link.',
 		return array(
 			array(
 				'id'   => 'leave-space-item',
+				'order' => 15,
 				'html' => $this->render(
 					'leave_space',
 					array(
@@ -853,7 +854,7 @@ Changing the Password will change the inivitation link.',
 	 */
 	private function try_to_register( Spaces_Invitation_Comparable $current_url ) {
 		if ( get_option( 'invitation_link' ) !== $this->get->get( 'invitation_link' ) ) { // queryvar matches blog setting.
-			if ( $this->get->get('src') === 'login' ) {
+			if ( $this->get->get( 'src' ) === 'login' ) {
 				header( 'Location: ' . get_home_url() . '/wp-login.php?action=privacy&src=invitation&invitation=failed' );
 				exit;
 			}
