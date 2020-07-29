@@ -182,6 +182,14 @@ class Spaces_Invitation {
 		);
 	}
 
+	public function translate_role( $role_name ) {
+		global $wp_roles;
+		if ( isset( $wp_roles->roles[ $role_name ] ) ) {
+			return translate_user_role( $wp_roles->roles[ $role_name ]['name'] );
+		} else {
+			return $role_name;
+		}
+	}
 	/**
 	 * Add an option field to the spaces "defaultspace"-theme.
 	 *
@@ -195,7 +203,7 @@ class Spaces_Invitation {
 			$link                         = $this->get_full_invitation_link();
 			$toggle_button_class          = $is_self_registration_enabled ? 'no-toggle' : '';
 			$link_enabled_class           = $link_enabled ? '' : 'link-disabled';
-			$default_role                 = translate_user_role( get_option( 'default_role' ) );
+			$default_role                 = $this->translate_role( get_option( 'default_role' ) );
 			// translators: %1 contains the name of a role (author by default).
 			$description = sprintf(
 				esc_html__(
