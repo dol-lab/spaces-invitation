@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Spaces Invitation\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-07-15 02:44+0000\n"
-"PO-Revision-Date: 2020-07-15 02:44+0000\n"
+"PO-Revision-Date: 2020-07-28 16:01+0000\n"
 "Last-Translator: ifs admin\n"
 "Language-Team: Deutsch\n"
 "Language: de_DE\n"
@@ -17,9 +17,6 @@ msgstr ""
 #. %1 contains the name of a role (author by default).
 #: includes/class-spaces-invitation.php:201
 #, php-format
-#| "Users who click on the invitation link or enter the space via Password "
-#| "will be added with the role \"%1$s\".\n"
-#| "Changing the Password will change the inivitation link."
 msgid ""
 "Users who click on the invitation link or enter the space via Password will "
 "be added with the role \"%s\".\n"
@@ -94,7 +91,7 @@ msgstr ""
 
 #: includes/class-spaces-invitation.php:745
 msgid "Join this space"
-msgstr "Diesem Raum beitreten"
+msgstr "Diesem Space beitreten"
 
 #: includes/class-spaces-invitation.php:746
 msgid ""
