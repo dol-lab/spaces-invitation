@@ -182,14 +182,17 @@ class Spaces_Invitation {
 		);
 	}
 
-	public function translate_role( $role_name ) {
-		global $wp_roles;
-		if ( isset( $wp_roles->roles[ $role_name ] ) ) {
-			return translate_user_role( $wp_roles->roles[ $role_name ]['name'] );
-		} else {
-			return $role_name;
-		}
+	/**
+	 * Translate a WordPress default role like "author".
+	 */
+	public function translate_role( $name ) {
+		/**
+		 * @var \WP_Roles $roles
+		 */
+		$roles = wp_roles();
+		return $roles->is_role( $name ) ? translate_user_role( $roles->get_names()[ $name ] ) : $name;
 	}
+
 	/**
 	 * Add an option field to the spaces "defaultspace"-theme.
 	 *
