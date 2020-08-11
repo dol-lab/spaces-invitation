@@ -3,6 +3,12 @@
  * Main plugin class file.
  *
  * @package WordPress Plugin Template/Includes
+ *
+ * @todo
+ * - the plugin name is not really god. this is not only about invitation, but access in general.
+ * - be more specific. get_invitation_link and the option should have a different name: "access_secret"?
+ * - the while invitation_link vs. password is still confusing.
+ * - there should (probably) be nothing about privacy here
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -113,25 +119,23 @@ class Spaces_Invitation {
 	private $invite_link;
 
 	/**
-	 * WordPress Database Class.
-	 *
-	 * @var \wpdb
-	 */
-	private $db;
-
-	/**
 	 * Wrapper class for the current GET variables
 	 *
 	 * @var Spaces_Invitation_Request
 	 */
-	private $get;
+	private $req_get;
 
 	/**
 	 * Wrapper class for the current POST variables
 	 *
 	 * @var Spaces_Invitation_Request
 	 */
-	private $post;
+	private $req_post;
+
+	/**
+	 * @var Spaces_Invitation_Comparable
+	 */
+	private $current_url_compare;
 
 	/**
 	 * Constructor funtion.
@@ -140,13 +144,13 @@ class Spaces_Invitation {
 	 * @param string $version Plugin version.
 	 */
 	public function __construct( $file = '', $version = '1.0.0' ) {
-		global $wpdb;
-		$this->get  = new Spaces_Invitation_Request( $_GET );
-		$this->post = new Spaces_Invitation_Request( $_POST );
+		$this->req_get  = new Spaces_Invitation_Request( $_GET );
+		$this->req_post = new Spaces_Invitation_Request( $_POST );
+
+		$this->current_url_compare = $this->get_current_url_comparable();
 
 		$this->_version = $version;
 		$this->_token   = 'Spaces_Invitation';
-		$this->db       = $wpdb;
 
 		// Load plugin environment variables.
 		$this->file       = $file;
@@ -164,7 +168,8 @@ class Spaces_Invitation {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_styles' ), 10 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ), 10 );
 
-		add_action( 'wp_loaded', array( $this, 'maybe_add_user_and_redirect' ) );
+		add_action( 'wp_loaded', array( $this, 'route' ) );
+		add_action( 'wp_loaded', array( $this, 'add_notifications' ) );
 
 		add_action( 'wp_ajax_invitation_link', array( $this, 'ajax_toggle_invitation_link' ) );
 		add_action( 'wp_ajax_nopriv_invitation_link', array( $this, 'ajax_toggle_invitation_link' ) );
@@ -184,6 +189,8 @@ class Spaces_Invitation {
 
 	/**
 	 * Translate a WordPress default role like "author".
+	 *
+	 * @todo: gendering role-names?
 	 */
 	public function translate_role( $name ) {
 		/**
@@ -252,7 +259,7 @@ Changing the Password will change the inivitation link.',
 	 * @return string
 	 */
 	public function invalid_invitation_link() {
-		if ( $this->get->get( 'invitation' ) === 'failed' ) {
+		if ( $this->req_get->get( 'invitation' ) === 'failed' ) {
 			return $this->get_invalid_invitation_link_message();
 		}
 	}
@@ -263,38 +270,80 @@ Changing the Password will change the inivitation link.',
 
 	/**
 	 * Triggered by 'wp_loaded'.
+	 */
+	public function add_notifications() {
+		if ( $this->req_get->get( 'invitation' ) === 'success' ) {
+			$this->add_callout( esc_html__( 'Welcome! You successfully joined this Space.', 'spaces-invitation' ) );
+		} elseif ( $this->req_get->get( 'invitation' ) === 'failed' ) {
+			$this->add_callout( $this->get_invalid_invitation_link_message() );
+		} elseif ( $this->req_get->get( 'leave_space' ) === 'success' ) {
+			$this->add_callout( esc_html__( 'You have left this Space.', 'spaces-invitation' ) );
+		}
+	}
+
+	/**
+	 * Triggered by 'wp_loaded'.
 	 * Check if the invitation_link link is present and valid.
 	 */
-	public function maybe_add_user_and_redirect() {
-		$current_url = $this->get_current_url();
+	public function route() {
+		$this->maybe_leave_space();
+		$this->handle_invitation_link( $this->current_url_compare );
+	}
 
-		if ( $this->get->get( 'invitation' ) === 'success' ) {
-			add_filter(
-				'spaces_invitation_notices',
-				$this->callout(
-					esc_html__( 'Welcome! You successfully joined this Space.', 'spaces-invitation' )
-				)
-			);
-			return;
-		} elseif ( $this->get->get( 'invitation' ) === 'failed' ) {
-			add_filter(
-				'spaces_invitation_notices',
-				$this->callout(
-					$this->get_invalid_invitation_link_message(),
-					'alert'
-				)
-			);
+	/**
+	 * If the users is not the last who can 'promote users' she is removed from a blog.
+	 * Otherwise a warning is
+	 */
+	public function maybe_leave_space() {
+		if ( $this->req_get->get( 'leave_space' ) !== 'true'
+			|| ! $this->current_url_compare->equals( get_home_url() ) ) {
+				return;
 		}
-
-		if ( $this->get->get( 'leave_space' ) === 'true' && $current_url->equals( get_home_url() ) ) {
+		/**
+		 * The capability 'promote_users'
+		 * - Enables the ‘Add Existing User’ to function for multi-site installs.
+		 * - Enables the “Change role to…” dropdown in the admin user list
+		 */
+		$admins = $this->get_users_by_capability( 'promote_users' );
+		if ( count( $admins ) < 2 ) {
+			$msg = esc_html__(
+				"You can't leave this Space because you are the last member who can manage users.
+Please add somebody or delete this Space.",
+				'spaces-invitation'
+			);
+			$this->add_callout( $msg, 'alert' );
+		} else {
 			remove_user_from_blog( get_current_user_id() );
-			header( 'Location: ' . get_home_url() );
-			exit;
+			if ( wp_redirect( add_query_arg( 'leave_space', 'success', get_home_url() ) ) ) {
+				exit;
+			}
 		}
+	}
 
-		if ( $this->is_invitation_link_enabled() ) {
-			$this->handle_invitation_link( $current_url );
+	/**
+	 * Get all users with a capability in the current blog.
+	 *
+	 * @param string $cap_name The name of the capability like 'publish posts'.
+	 * @return int[] an array of user ids. Might be empty.
+	 */
+	private function get_users_by_capability( $cap_name ) {
+		$role__in = array();
+		foreach ( wp_roles()->roles as $role_slug => $role ) {
+			$role_cap = $role['capabilities'];
+			if ( isset( $role_cap[ $cap_name ] ) && ! empty( $role_cap[ $cap_name ] ) ) {
+				$role__in[] = $role_slug;
+			}
 		}
+		$users = array();
+		if ( $role__in ) {
+			$users = get_users(
+				array(
+					'role__in' => $role__in,
+					'fields' => 'ids',
+				)
+			);
+		}
+		return $users;
 	}
 
 	/**
@@ -420,7 +469,6 @@ Changing the Password will change the inivitation link.',
 	 *
 	 * @return Object Spaces_Invitation instance
 	 * @see Spaces_Invitation()
-	 * @since 1.0.0
 	 * @static
 	 */
 	public static function instance( $file = '', $version = '1.0.0' ) {
@@ -429,37 +477,32 @@ Changing the Password will change the inivitation link.',
 		}
 
 		return self::$_instance;
-	} // End instance ()
+	}
 
 	/**
 	 * Cloning is forbidden.
-	 *
-	 * @since 1.0.0
 	 */
 	public function __clone() {
 		_doing_it_wrong( __FUNCTION__, esc_html( 'Cloning of Spaces_Invitation is forbidden' ), esc_attr( $this->_version ) );
 
-	} // End __clone ()
+	}
 
 	/**
 	 * Unserializing instances of this class is forbidden.
-	 *
-	 * @since 1.0.0
 	 */
 	public function __wakeup() {
 		_doing_it_wrong( __FUNCTION__, esc_html( 'Unserializing instances of Spaces_Invitation is forbidden' ), esc_attr( $this->_version ) );
-	} // End __wakeup ()
+	}
 
 	/**
 	 * Installation. Runs on activation.
 	 *
 	 * @access  public
 	 * @return  void
-	 * @since   1.0.0
 	 */
 	public function install() {
 		$this->_log_version_number();
-	} // End install ()
+	}
 
 	/**
 	 * This function is called when the ajax call for 'invitation_link' is called.
@@ -485,7 +528,6 @@ Changing the Password will change the inivitation link.',
 	 * @return bool return true if the current space is open and users can join on their own
 	 */
 	public function is_self_registration_enabled() {
-		// return false;
 		return get_option( 'self_registration', false );
 	}
 
@@ -496,7 +538,7 @@ Changing the Password will change the inivitation link.',
 	public function ajax_toggle_self_registration() {
 		check_ajax_referer( 'self_registration' );
 		if ( $this->can_change_self_registration() ) {
-			$this->update_boolean_option_respond_json( 'self_registration', ( 'true' === $this->post->get( 'activate' ) ) );
+			$this->update_boolean_option_respond_json( 'self_registration', ( 'true' === $this->req_post->get( 'activate' ) ) );
 		} else {
 			wp_send_json_error( array( 'message' => 'You are not allowed to do that.' ) );
 		}
@@ -655,6 +697,9 @@ Changing the Password will change the inivitation link.',
 		}
 	}
 
+	public function add_callout( $message, $type = 'success' ) {
+		add_filter( 'spaces_invitation_notices', $this->render_callout( $message, $type ) );
+	}
 
 	/**
 	 * Creates a clousure that can be used to render a simple callout.
@@ -662,7 +707,7 @@ Changing the Password will change the inivitation link.',
 	 * @param string $message The message to be rendered.
 	 * @param string $type The class name of the callout.
 	 */
-	private function callout( $message, string $type = 'success' ) {
+	private function render_callout( $message, string $type = 'success' ) {
 		return function() use ( $message, $type ) {
 			return $this->render(
 				'callout',
@@ -704,27 +749,6 @@ Changing the Password will change the inivitation link.',
 	 */
 	private function blog_is_private() {
 		return self::PRIVATE === (int) get_option( 'blog_public' );
-	}
-
-	/**
-	 *
-	 * Checks for self_registration and adds the user to the blog or adds a button to join / leave the space resprectively.
-	 */
-	private function handle_self_registration() {
-		if ( ! is_user_logged_in()
-			|| $this->blog_is_private() // there is no self-registration in private blogs.
-			|| $this->user_has_all_caps_of_default_role() // the user already has all the capabilies of role that would be added.
-		) {
-			return;
-		}
-
-		if ( $this->get->get( 'join' ) ) {
-			add_user_to_blog( get_current_blog_id(), get_current_user_id(), get_option( 'default_role' ) );
-			header( 'Location: ' . get_home_url() . '?invitation=success' );
-			exit;
-		}
-
-		add_filter( 'spaces_invitation_notices', array( $this, 'filter_join_this_space_notice' ) );
 	}
 
 	/**
@@ -784,12 +808,12 @@ Changing the Password will change the inivitation link.',
 		if ( ! $this->can_change_invitation_options() ) {
 			wp_send_json_error( array( 'message' => 'You are not allowed to do this' ) );
 			return;
-		} elseif ( ! $this->post->has( 'token' ) ) {
+		} elseif ( ! $this->req_post->has( 'token' ) ) {
 			wp_send_json_error( array( 'message' => 'Token is missing' ) );
 			return;
 		}
 
-		$token = esc_html( $this->post->get( 'token' ) );
+		$token = esc_html( $this->req_post->get( 'token' ) );
 		update_option( 'invitation_link', $token );
 
 		wp_send_json( array( 'link' => get_home_url() . '?invitation_link=' . $token ) );
@@ -817,13 +841,13 @@ Changing the Password will change the inivitation link.',
 			),
 		);
 	}
-
 	/**
 	 * Return a comparator for the current url.
+	 *
+	 * @return Spaces_Invitation_Comparable
 	 */
-	private function get_current_url() {
+	private function get_current_url_comparable() {
 		$server = new Spaces_Invitation_Request( $_SERVER );
-
 		return new Spaces_Invitation_Comparable( trim( $server->get( 'WP_HOME' ) . strtok( $server->get( 'REQUEST_URI' ), '?' ), '/' ) );
 	}
 
@@ -836,23 +860,19 @@ Changing the Password will change the inivitation link.',
 
 	/**
 	 * Checks if the current_user is trying to add himself to the current space.
-	 *
-	 * @param Spaces_Invitation_Comparable $current_url Comparator for the current url.
 	 */
-	private function is_trying_to_register( Spaces_Invitation_Comparable $current_url ) {
-		return $this->get->has( 'invitation_link' )
-			&& $current_url->equals( get_home_url() )
+	private function is_trying_to_register() {
+		return $this->req_get->has( 'invitation_link' )
+			&& $this->current_url_compare->equals( get_home_url() )
 			&& is_user_logged_in()
 			&& ! is_super_admin();
 	}
 
 	/**
 	 * Adds a form to enter the invitation token for the appropriate places.
-	 *
-	 * @param Spaces_Invitation_Comparable $current_url The current url of the request.
 	 */
-	private function add_invitation_form( Spaces_Invitation_Comparable $current_url ) {
-		if ( $current_url->equals( wp_login_url() ) ) {
+	private function add_invitation_form() {
+		if ( $this->current_url_compare->equals( wp_login_url() ) ) {
 			add_filter( 'more_privacy_custom_login_form', array( $this, 'add_password_form_backend' ) );
 		}
 		add_filter( 'spaces_invitation_notices', array( $this, 'add_password_form_frontend' ) );
@@ -860,12 +880,10 @@ Changing the Password will change the inivitation link.',
 
 	/**
 	 * Try to register the current user to the current space.
-	 *
-	 * @param Spaces_Invitation_Comparable $current_url
 	 */
-	private function try_to_register( Spaces_Invitation_Comparable $current_url ) {
-		if ( get_option( 'invitation_link' ) !== $this->get->get( 'invitation_link' ) ) { // queryvar matches blog setting.
-			if ( $this->get->get( 'src' ) === 'login' ) {
+	private function try_to_register() {
+		if ( get_option( 'invitation_link' ) !== $this->req_get->get( 'invitation_link' ) ) { // queryvar matches blog setting.
+			if ( $this->req_get->get( 'src' ) === 'login' ) {
 				header( 'Location: ' . get_home_url() . '/wp-login.php?action=privacy&src=invitation&invitation=failed' );
 				exit;
 			}
@@ -888,19 +906,20 @@ Changing the Password will change the inivitation link.',
 
 	/**
 	 * Checks if the user is trying to register and adds a form if not.
-	 *
-	 * @param Spaces_Invitation_Comparable $current_url The current url of the request.
 	 */
-	private function handle_invitation_link( Spaces_Invitation_Comparable $current_url ) {
-		// var_dump($this->is_trying_to_register( $current_url ), ! is_user_member_of_blog(), apply_filters( 'is_self_registration_enabled', false ));exit;
-		if ( $this->is_trying_to_register( $current_url ) ) {
-			$this->try_to_register( $current_url );
+	private function handle_invitation_link() {
+		if ( ! $this->is_invitation_link_enabled() ) {
+			return;
+		}
+		// var_dump($this->is_trying_to_register( $current_url_compare ), ! is_user_member_of_blog(), apply_filters( 'is_self_registration_enabled', false ));exit;
+		if ( $this->is_trying_to_register() ) {
+			$this->try_to_register();
 		} elseif ( ! is_user_member_of_blog() ) {
 			if ( apply_filters( 'is_self_registration_enabled', false ) ) {
 				add_filter( 'spaces_invitation_notices', array( $this, 'filter_join_this_space_notice' ) );
 				return;
 			} else {
-				$this->add_invitation_form( $current_url );
+				$this->add_invitation_form( $this->current_url_compare );
 			}
 		}
 	}
