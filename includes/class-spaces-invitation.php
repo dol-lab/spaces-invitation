@@ -300,12 +300,18 @@ Changing the Password will change the inivitation link.',
 				return;
 		}
 		/**
-		 * The capability 'promote_users'
+		 * The capability 'promote_users' can do the following:
 		 * - Enables the ‘Add Existing User’ to function for multi-site installs.
 		 * - Enables the “Change role to…” dropdown in the admin user list
 		 */
-		$admins = $this->get_users_by_capability( 'promote_users' );
-		if ( count( $admins ) < 2 ) {
+		$cap = 'promote_users';
+		$admins = $this->get_users_by_capability( $cap );
+		$is_admin = current_user_can( $cap );
+
+		/**
+		 * If there is only one admin left and the current user is an admin.
+		 */
+		if ( count( $admins ) < 2 && $is_admin ) {
 			$msg = esc_html__(
 				"You can't leave this Space because you are the last member who can manage users.
 Please add somebody or delete this Space.",
