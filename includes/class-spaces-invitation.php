@@ -837,13 +837,23 @@ Please add somebody or delete this Space.",
 			array(
 				'id'   => 'leave-space-item',
 				'order' => 15,
-				'html' => $this->render(
-					'leave_space',
-					array(
-						'text' => __( 'Leave Space', 'spaces-invitation' ),
-						'url'  => get_home_url() . '?leave_space=true',
-					)
+				'data' => array(
+					'text' => __( 'Leave Space', 'spaces-invitation' ),
+					'confirm' => __(
+						'Are you sure you want to leave this space? You will not be able to write posts or see private posts here anymore.',
+						'spaces-invitation'
+					),
+					'url'  => get_home_url() . '?leave_space=true',
 				),
+				'html' => '
+					<a
+						href="{{ url }}"
+						title="Click here to leave this Space."
+						class="alert"
+						onclick="return confirm(\'{{confirm}}\')"
+					>
+						<i class="fas fa-leaf"></i>{{ text }}
+					</a>',
 			),
 		);
 	}
