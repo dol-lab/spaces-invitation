@@ -179,12 +179,54 @@ class Spaces_Invitation {
 
 		$this->load_plugin_textdomain();// Handle localisation.
 		add_action( 'init', array( $this, 'load_localisation' ), 0 );
-		add_filter(
-			'is_self_registration_enabled',
-			function() {
-				return $this->is_self_registration_enabled();
-			}
+
+		/**
+		 * You can access this property in your theme by using
+		 * apply_filter( 'is_self_registration_enabled' )
+		 *
+		 * Adding this filter assigns the proper default via. 'self_reg_enabled'.
+		 */
+		add_filter( 'is_self_registration_enabled', array( $this, 'self_reg_enabled' ) );
+	}
+
+	/**
+	 * Use this function to load plugin options, as options have mutual dependencies.
+	 *
+	 * @param string $option_name
+	 * @return mixed The value of the option.
+	 */
+	private function get_plugin_option( $option_name ) {
+		$opts = array(
+			'invitation_link' => $this->get_invitation_link(),
+			'invitation_link_active' => filter_var( get_option( 'invitation_link_active', true ), FILTER_VALIDATE_BOOLEAN ),
+			'self_registration' => $this->self_reg_enabled( true ),
 		);
+
+		if ( ! isset( $opts[ $option_name ] ) ) {
+			wp_die( "Spaces Invitation: The option $option_name was not found" );
+		}
+
+		/**
+		 * The 'self_registration'-option is dominant, it changes the other options, if it's true.
+		 */
+		if ( $opts['self_registration'] ) {
+			$opts['invitation_link'] = 'welcome'; // don't expose a previously set user password.
+			$opts['invitation_link_active'] = true; // the link is active, if self_registration is enabled.
+		}
+		return $opts[ $option_name ];
+
+	}
+
+	/**
+	 * Don't use this function. Use get_plugin_option('self_registration') instead.
+	 *
+	 * @param bool $filter wether the filter is_self_registration_enabled is applied.
+	 * @return bool
+	 */
+	private function self_reg_enabled( $filter = false ) {
+		$is_enabled = filter_var( get_option( 'self_registration', true ), FILTER_VALIDATE_BOOLEAN );
+		return $filter ? apply_filters( 'is_self_registration_enabled', $is_enabled ) : $is_enabled;
+
 	}
 
 	/**
@@ -207,9 +249,8 @@ class Spaces_Invitation {
 	 */
 	public function add_settings_item( $settings_items ) {
 		if ( $this->can_change_invitation_options() ) {
-			$is_self_registration_enabled = apply_filters( 'is_self_registration_enabled', false );
-			$is_private_or_community      = $this->blog_is_private_or_community();
-			$link_enabled                 = $this->is_invitation_link_enabled();
+			$is_self_registration_enabled = $this->get_plugin_option( 'self_registration' );
+			$link_enabled                 = $this->get_plugin_option( 'invitation_link_active' );
 			$link                         = $this->get_full_invitation_link();
 			$toggle_button_class          = $is_self_registration_enabled ? 'no-toggle' : '';
 			$link_enabled_class           = $link_enabled ? '' : 'link-disabled';
@@ -275,7 +316,7 @@ Changing the Password will change the inivitation link.',
 		if ( $this->req_get->get( 'invitation' ) === 'success' ) {
 			$this->add_callout( esc_html__( 'Welcome! You successfully joined this Space.', 'spaces-invitation' ) );
 		} elseif ( $this->req_get->get( 'invitation' ) === 'failed' ) {
-			$this->add_callout( $this->get_invalid_invitation_link_message() );
+			$this->add_callout( $this->get_invalid_invitation_link_message(), 'alert' );
 		} elseif ( $this->req_get->get( 'leave_space' ) === 'success' ) {
 			$this->add_callout( esc_html__( 'You have left this Space.', 'spaces-invitation' ) );
 		}
@@ -393,6 +434,8 @@ Please add somebody or delete this Space.",
 
 	/**
 	 * Load frontend Javascript.
+	 *
+	 * @todo: each wp_localize_script creates a new <script> in dom. this could be a single object.
 	 *
 	 * @access  public
 	 * @return  void
@@ -525,16 +568,6 @@ Please add somebody or delete this Space.",
 			wp_send_json_error( array( 'message' => 'Specify a value for activate' ) );
 		}
 		$this->update_boolean_option_respond_json( 'invitation_link_active', ( 'true' === $_POST['activate'] ) );
-	}
-
-	/**
-	 * Checks if users can become an author in the current space.
-	 * Don't call this function directly but with the filter: apply_filters( 'is_self_registration_enabled', false ).
-	 *
-	 * @return bool return true if the current space is open and users can join on their own
-	 */
-	public function is_self_registration_enabled() {
-		return get_option( 'self_registration', false );
 	}
 
 	/**
@@ -711,7 +744,7 @@ Please add somebody or delete this Space.",
 	 * Creates a clousure that can be used to render a simple callout.
 	 *
 	 * @param string $message The message to be rendered.
-	 * @param string $type The class name of the callout.
+	 * @param string $type The class name of the callout ('success', 'primary', 'warning', 'alert')
 	 */
 	private function render_callout( $message, string $type = 'success' ) {
 		return function() use ( $message, $type ) {
@@ -731,7 +764,7 @@ Please add somebody or delete this Space.",
 	 * @return array
 	 */
 	private function self_registration_build_item() {
-		$enabled        = apply_filters( 'is_self_registration_enabled', false );
+		$enabled        = $this->get_plugin_option( 'self_registration' );
 		$enabled_string = $enabled ? esc_html__( 'enabled', 'spaces-invitation' ) : esc_html__( 'disabled', 'spaces-invitation' );
 
 		return array(
@@ -868,13 +901,6 @@ Please add somebody or delete this Space.",
 	}
 
 	/**
-	 * Returns if the invitation link is active.
-	 */
-	private function is_invitation_link_enabled() {
-		return get_option( 'invitation_link_active' );
-	}
-
-	/**
 	 * Checks if the current_user is trying to add himself to the current space.
 	 */
 	private function is_trying_to_register() {
@@ -924,14 +950,14 @@ Please add somebody or delete this Space.",
 	 * Checks if the user is trying to register and adds a form if not.
 	 */
 	private function handle_invitation_link() {
-		if ( ! $this->is_invitation_link_enabled() ) {
+		if ( ! $this->get_plugin_option( 'invitation_link_active' ) ) {
 			return;
 		}
 		// var_dump($this->is_trying_to_register( $current_url_compare ), ! is_user_member_of_blog(), apply_filters( 'is_self_registration_enabled', false ));exit;
 		if ( $this->is_trying_to_register() ) {
 			$this->try_to_register();
 		} elseif ( ! is_user_member_of_blog() ) {
-			if ( apply_filters( 'is_self_registration_enabled', false ) ) {
+			if ( $this->get_plugin_option( 'self_registration' ) ) {
 				add_filter( 'spaces_invitation_notices', array( $this, 'filter_join_this_space_notice' ) );
 				return;
 			} else {
