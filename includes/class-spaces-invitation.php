@@ -182,11 +182,16 @@ class Spaces_Invitation {
 
 		/**
 		 * You can access this property in your theme by using
-		 * apply_filter( 'is_self_registration_enabled' )
+		 * apply_filter( 'is_self_registration_enabled', true )
 		 *
 		 * Adding this filter assigns the proper default via. 'self_reg_enabled'.
 		 */
-		add_filter( 'is_self_registration_enabled', array( $this, 'self_reg_enabled' ) );
+		add_filter(
+			'is_self_registration_enabled',
+			function() {
+				return $this->self_reg_enabled( false );
+			}
+		);
 	}
 
 	/**
@@ -199,11 +204,11 @@ class Spaces_Invitation {
 		$opts = array(
 			'invitation_link' => $this->get_invitation_link(),
 			'invitation_link_active' => filter_var( get_option( 'invitation_link_active', true ), FILTER_VALIDATE_BOOLEAN ),
-			'self_registration' => $this->self_reg_enabled( true ),
+			'self_registration' => $this->self_reg_enabled(),
 		);
 
-		if ( ! isset( $opts[ $option_name ] ) ) {
-			wp_die( "Spaces Invitation: The option $option_name was not found" );
+		if ( ! array_key_exists( $option_name, $opts ) ) {
+			wp_die( "Spaces Invitation: The option '$option_name' was not found" );
 		}
 
 		/**
@@ -223,7 +228,7 @@ class Spaces_Invitation {
 	 * @param bool $filter wether the filter is_self_registration_enabled is applied.
 	 * @return bool
 	 */
-	private function self_reg_enabled( $filter = false ) {
+	private function self_reg_enabled( $filter = true ) {
 		$is_enabled = filter_var( get_option( 'self_registration', true ), FILTER_VALIDATE_BOOLEAN );
 		return $filter ? apply_filters( 'is_self_registration_enabled', $is_enabled ) : $is_enabled;
 
