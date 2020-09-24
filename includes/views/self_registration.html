@@ -1,13 +1,5 @@
-<label class="icon-left label-wrapper self-registration-label {{ is_private_class }}">
-    <i class="far fa-handshake"></i>
-    <span class="self-registration-text"></span>
-    <div class="switch small self-registration-toggle success">
-        <input type="checkbox" class="switch-input" name="self-registration-input" id="self-registration-input" data-checked="{{ enabled }}"/>
-        <label class="switch-paddle" for="self-registration-input">
-        </label>
-    </div>
-</label>
-<label class="icon-left label-wrapper self-registration-disabled">
-    <i class="far fa-handshake"></i>
-    <span class="self-registration-text">{{ self_registration_text }}</span>
-</label>
+<div class="card-section no-padding radio-accordion-content" style="{{ style }}">
+<small>
+    {{ description }}
+</small>
+</div>

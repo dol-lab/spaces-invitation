@@ -171,11 +171,12 @@ class Spaces_Invitation {
 		add_action( 'wp_loaded', array( $this, 'route' ) );
 		add_action( 'wp_loaded', array( $this, 'add_notifications' ) );
 
-		add_action( 'wp_ajax_invitation_link', array( $this, 'ajax_toggle_invitation_link' ) );
-		add_action( 'wp_ajax_nopriv_invitation_link', array( $this, 'ajax_toggle_invitation_link' ) );
-		add_action( 'wp_ajax_self_registration', array( $this, 'ajax_toggle_self_registration' ) );
-		add_action( 'wp_ajax_nopriv_self_registration', array( $this, 'ajax_toggle_self_registration' ) );
+		add_action( 'wp_ajax_change_invitation_option', array( $this, 'ajax_change_invitation_option' ) );
+		add_action( 'wp_ajax_nopriv_change_invitation_option', array( $this, 'ajax_change_invitation_option' ) );
 		add_action( 'wp_ajax_invitation_update_token', array( $this, 'update_token' ) );
+		add_action( 'update_option_blog_public', array( $this, 'on_update_blog_public' ), 10, 2 );
+		add_action( 'wp_ajax_get_disabled_options', array( $this, 'ajax_get_disabled_options' ) );
+		add_action( 'wp_ajax_nopriv_get_disabled_options', array( $this, 'ajax_get_disabled_options' ) );
 
 		$this->load_plugin_textdomain();// Handle localisation.
 		add_action( 'init', array( $this, 'load_localisation' ), 0 );
@@ -254,42 +255,36 @@ class Spaces_Invitation {
 	 */
 	public function add_settings_item( $settings_items ) {
 		if ( $this->can_change_invitation_options() ) {
-			$is_self_registration_enabled = $this->get_plugin_option( 'self_registration' );
-			$link_enabled                 = $this->get_plugin_option( 'invitation_link_active' );
-			$link                         = $this->get_full_invitation_link();
-			$toggle_button_class          = $is_self_registration_enabled ? 'no-toggle' : '';
-			$link_enabled_class           = $link_enabled ? '' : 'link-disabled';
-			$default_role                 = $this->translate_role( get_option( 'default_role' ) );
-			// translators: %1 contains the name of a role (author by default).
-			$description = sprintf(
-				esc_html__(
-					'Users who click on the invitation link or enter the space via Password will be added with the role "%s".
-Changing the Password will change the inivitation link.',
-					'spaces-invitation'
-				),
-				$default_role
-			);
-
-			$item = array(
-				'id'   => 'invitation-item',
-				'html' => $this->render(
-					'settings',
+			$active = $this->get_active_option();
+			$title = esc_html__( 'Access', 'spaces-invitation' );
+			$settings_items[] = array(
+				'id' => 'invitation-settings',
+				'html' => '<a><i class="fa fa-link"></i><span>' . $title . '</span></a>',
+				'children' => array(
 					array(
-						'link'                => $link,
-						'link_enabled'        => $link_enabled,
-						'toggle_button_class' => $toggle_button_class,
-						'default_role'        => $default_role,
-						'link_enabled_class'  => $link_enabled_class,
-						'description_text' => $description,
-						'copy_text' => esc_html__( 'Press Ctrl+C to copy.', 'spaces-invitation' ),
-						'change_password_text' => esc_html__( 'Change Password', 'spaces-invitation' ),
+						'id' => 'invitation-item',
+						'html' => $this->create_settings_option(
+							'invitation-status',
+							esc_html__( 'Deactivated', 'spaces-invitation' ),
+							$active,
+							'none',
+							'times'
+						),
+						'class' => 'success radio-accordion radio-accordion-item'
+					),
+					array(
+						'id' => 'invitation-item2',
+						'html' => $this->create_invitation_link_settings_option( $active ),
+						'class' => 'success radio-accordion radio-accordion-item'
+					),
+					array(
+						'id' => 'invitation-item3',
+						'html' => $this->create_self_registration_setting_option( $active ),
+						'class' => 'success radio-accordion radio-accordion-item'
 					)
-				),
+				)
 			);
-			array_splice( $settings_items, count( $settings_items ) - 1, 0, array( $item ) );
-
-			$self_registration_item = $this->self_registration_build_item();
-			array_splice( $settings_items, count( $settings_items ) - 1, 0, array( $self_registration_item ) );
+			return $settings_items;
 		}
 
 		$leave_space_items = $this->build_leave_space_items();
@@ -475,6 +470,7 @@ Please add somebody or delete this Space.",
 				'invitation_link'         => wp_create_nonce( 'invitation_link' ),
 				'self_registration'       => wp_create_nonce( 'self_registration' ),
 				'invitation_update_token' => wp_create_nonce( 'invitation_update_token' ),
+				'get_disabled_options'    => wp_create_nonce( 'get_disabled_options' ),
 			)
 		);
 		wp_localize_script(
@@ -564,27 +560,48 @@ Please add somebody or delete this Space.",
 	 * @todo add nonces.
 	 * The function never returns.
 	 */
-	public function ajax_toggle_invitation_link() {
+	public function ajax_change_invitation_option() {
 		check_ajax_referer( 'invitation_link' );
 		if ( ! $this->can_change_invitation_options() ) {
 			wp_send_json_error( array( 'message' => esc_html__( 'You are not allowed to do that.', 'spaces-invitation' ) ) );
 		}
-		if ( ! isset( $_POST['activate'] ) ) {
-			wp_send_json_error( array( 'message' => 'Specify a value for activate' ) );
+		if ( ! isset( $_POST['option'] ) ) {
+			wp_send_json_error( array( 'message' => 'Specify a value for option' ) );
 		}
-		$this->update_boolean_option_respond_json( 'invitation_link_active', ( 'true' === $_POST['activate'] ) );
-	}
+		$new_option = $_POST['option'];
 
-	/**
-	 * This function is called when the ajax call for 'self_registration' is called.
-	 * The function never returns.
-	 */
-	public function ajax_toggle_self_registration() {
-		check_ajax_referer( 'self_registration' );
-		if ( $this->can_change_self_registration() ) {
-			$this->update_boolean_option_respond_json( 'self_registration', ( 'true' === $this->req_post->get( 'activate' ) ) );
+		$updated = array();
+
+		switch( $new_option ) {
+		case 'none':
+			// deactivate all
+			$updated[] = $this->update_boolean_option( 'invitation_link_active', false );
+			$updated[] = $this->update_boolean_option( 'self_registration', false );
+
+			break;
+		case 'self_registration':
+			if ( ! $this->can_change_self_registration() ) {
+				wp_send_json_error( array( 'message' => 'You are not allowed to do that.' ) );
+				return;
+			}
+			$updated[] = $this->update_boolean_option( 'invitation_link_active', true );
+			$updated[] = $this->update_boolean_option( 'self_registration', true );
+
+			break;
+		case 'invitation_link':
+			$updated[] = $this->update_boolean_option( 'invitation_link_active', true );
+			$updated[] = $this->update_boolean_option( 'self_registration', false );
+
+			break;
+		default:
+			wp_send_json_error( array( 'message' => 'Invalid option given.' ) );
+			return;
+		}
+
+		if ( ! empty( array_filter( $updated, function($value) {return !$value;} ) ) ) {
+			wp_send_json_error( array( 'message' => 'Could not update options.' ) );
 		} else {
-			wp_send_json_error( array( 'message' => 'You are not allowed to do that.' ) );
+			wp_send_json( array( 'message' => 'Updated options to ' . $new_option ) );
 		}
 	}
 
@@ -850,7 +867,7 @@ Please add somebody or delete this Space.",
 	public function update_token() {
 		check_ajax_referer( 'invitation_update_token' );
 		if ( ! $this->can_change_invitation_options() ) {
-			wp_send_json_error( array( 'message' => 'You are not allowed to do this' ) );
+			wp_send_json_error( array( 'message' => 'You are not allowed to do this.' ) );
 			return;
 		} elseif ( ! $this->req_post->has( 'token' ) ) {
 			wp_send_json_error( array( 'message' => 'Token is missing' ) );
@@ -861,6 +878,26 @@ Please add somebody or delete this Space.",
 		update_option( 'invitation_link', $token );
 
 		wp_send_json( array( 'link' => get_home_url() . '?invitation_link=' . $token ) );
+	}
+
+	public function on_update_blog_public($old_value, $new_value) {
+		$self_registration_enabled = filter_var( get_option( 'self_registration', true ), FILTER_VALIDATE_BOOLEAN ); // don't use $this->get_plugin_option since the blog_public is already private
+		if ( $self_registration_enabled && self::PRIVATE === $new_value ) {
+			update_option( 'self_registration', 'false' );
+			update_option( 'invitation_link_active', 'false' );
+		}
+	}
+
+	public function ajax_get_disabled_options() {
+		check_ajax_referer( 'get_disabled_options' );
+		if ( ! $this->can_change_invitation_options() ) {
+			wp_send_json_error( array( 'message' => 'You are not allowed to do this.' ) );
+			return;
+		}
+		wp_send_json( array(
+			'disabled_options' => $this->get_disabled_options(),
+			'active_option' => $this->get_active_option()
+		) );
 	}
 
 	/**
@@ -978,12 +1015,89 @@ Please add somebody or delete this Space.",
 	 * @param bool   $bool_value The value the option should become.
 	 */
 	private function update_boolean_option_respond_json( string $option_name, bool $bool_value ) {
-		$updated = update_option( $option_name, (string) $bool_value );
+		$boolstring = $bool_value ? 'true' : 'false';
+		$updated = update_option( $option_name, $bool_value ? 'true' : 'false' );
 		if ( $updated ) {
-			$boolstring = $bool_value ? 'true' : 'false';
 			wp_send_json( array( 'message' => 'The option "' . $option_name . '" is now ' . $boolstring ) );
 		} else {
 			wp_send_json_error( array( 'message' => 'The option "' . $option_name . '" was not updated.' ) );
 		}
+	}
+
+	private function create_settings_option( string $inputName, string $text, string $active_value, string $value, string $icon ) {
+		return $this->render( 'settings_option', array(
+			'id'        => 'input_' . $value,
+			'inputName' => $inputName,
+			'text'      => $text,
+			'checked'   => ($active_value === $value ? 'checked="checked"' : ''),
+			'value'     => $value,
+			'disabled'  => false !== array_search( $value, $this->get_disabled_options(), true ) ? 'disabled' : '',
+			'icon'      => $icon,
+		) );
+	}
+
+	private function get_disabled_options() {
+		return $this->blog_is_private() ? array( 'self_registration' ) : array();
+	}
+
+	private function get_active_option() {
+		if ( $this->get_plugin_option( 'self_registration' ) ) {
+			return 'self_registration';
+		} else if ( $this->get_plugin_option( 'invitation_link_active' ) ) {
+			return 'invitation_link';
+		}
+
+		return 'none';
+	}
+
+	private function create_invitation_link_settings_option( string $active_value ) {
+		$value = 'invitation_link';
+		$default_role = $this->translate_role( get_option( 'default_role' ) );
+		$description = sprintf(
+			esc_html__(
+					'Users who click on the invitation link or enter the space via Password will be added with the role "%s".
+Changing the Password will change the inivitation link.',
+					'spaces-invitation'
+				),
+				$default_role
+			);
+
+		$parameters = array(
+			'link' => $this->get_full_invitation_link(),
+			'copy_text' => esc_html__( 'Press Ctrl+C to copy.', 'spaces-invitation' ),
+			'change_password_text' => esc_html__( 'Change Password', 'spaces-invitation' ),
+			'style' => $active_value === $value ? 'display: block;' : '',
+			'description' => $description
+		);
+
+		return $this->create_settings_option( 'invitation-status', esc_html__( 'Invitation Link activated', 'spaces-invitation' ), $active_value, $value, 'key' )
+			 . $this->render( 'invitation_link_input', $parameters );
+	}
+
+	private function create_self_registration_setting_option( string $active_value ) {
+		$value = 'self_registration';
+		$description = esc_html__( 'Self-registration can not be enabled in private spaces.', 'spaces-invitation' );
+
+		$option = $this->create_settings_option(
+			'invitation-status',
+			esc_html__( 'Self Registration activated', 'spaces-invitation' ),
+			$active_value,
+			$value,
+			'sign-in-alt'
+		);
+
+		return $option . $this->render( 'self_registration', array(
+			'style'       => $active_value === $value ? 'display: block;' : '',
+			'description' => $description
+		) );
+	}
+
+	private function update_boolean_option( string $name, bool $value ) {
+		$old_value = filter_var( get_option( $name ), FILTER_VALIDATE_BOOLEAN );
+		if ( $old_value === $value ) {
+			return true;
+		}
+
+		return update_option( $name, $value ? 'true' : 'false' );
 	}
 }
