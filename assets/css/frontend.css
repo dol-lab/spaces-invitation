@@ -1,29 +1,29 @@
 /* phpcs:ignore */
 
-#invitation-item .label-wrapper {
+#invitation-settings .label-wrapper {
 	align-items: start;
 }
 
-#invitation-item input.invitation-link {
+#invitation-settings input.invitation-link {
 	cursor: text;
 	color: #888888;
 	padding: 0;
 	border: 0;
 	height: auto;
 	margin-top: 5px;
-    text-overflow: ellipsis;
+	text-overflow: ellipsis;
 }
 
 
-#invitation-item .has-tip {
+#invitation-settings .has-tip {
 	cursor: text;
 }
 
-.menu.icon-left > li.invitation-hide,
+.menu.icon-left>li.invitation-hide,
 .invitation-hide,
 .spaces-invitation-box.link-disabled,
 .spaces-invitation-link-box.link-disabled,
-.menu.icon-left > li > label.invitation-label.no-toggle .invitation-toggle,
+.menu.icon-left>li>label.invitation-label.no-toggle .invitation-toggle,
 label.invitation-label.no-toggle .invitation-toggle,
 .invitation-toggle.link-disabled {
 	display: none;
@@ -31,42 +31,41 @@ label.invitation-label.no-toggle .invitation-toggle,
 
 .invitation-label:not(.no-toggle),
 .self-registration-label:not(.link-disabled) {
-    cursor: pointer;
+	cursor: pointer;
 }
 
 .invitation-label.link-disabled {
-    cursor: default;
+	cursor: default;
 }
 
-li > label.self-registration-disabled.label-wrapper,
-li > label.self-registration-label.private {
-    display: none;
+li>label.self-registration-disabled.label-wrapper,
+li>label.self-registration-label.private {
+	display: none;
 }
 
-.self-registration-label.private + .self-registration-disabled {
-    display: flex;
+.self-registration-label.private+.self-registration-disabled {
+	display: flex;
 }
 
 .invitation-edit-link {
-    cursor: pointer;
+	cursor: pointer;
 }
 
 .spaces-invitation-link-box {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
 }
 
 .spaces-invitation-edit-modal {
-    position: absolute;
-    z-index: 1;
-    transform: translateY(100%);
-    display: flex;
-    left: 20px;
+	position: absolute;
+	z-index: 1;
+	transform: translateY(100%);
+	display: flex;
+	left: 20px;
 }
 
-.spaces-invitation-edit-modal input
-{
-    width: 200px;
+.spaces-invitation-edit-modal input {
+	width: 200px;
 
 }

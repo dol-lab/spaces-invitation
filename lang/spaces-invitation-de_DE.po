@@ -2,9 +2,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Spaces Invitation\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-09-08 14:34+0000\n"
-"PO-Revision-Date: 2020-09-08 14:37+0000\n"
-"Last-Translator: \n"
+"POT-Creation-Date: 2020-10-01 01:23+0000\n"
+"PO-Revision-Date: 2020-10-01 01:27+0000\n"
+"Last-Translator: ifs admin\n"
 "Language-Team: German\n"
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
@@ -14,34 +14,23 @@ msgstr ""
 "X-Generator: Loco https://localise.biz/\n"
 "X-Loco-Version: 2.4.3; wp-5.5.1"
 
-#. %1 contains the name of a role (author by default).
-#: includes/class-spaces-invitation.php:219
-#, php-format
-msgid ""
-"Users who click on the invitation link or enter the space via Password will "
-"be added with the role \"%s\".\n"
-"Changing the Password will change the inivitation link."
-msgstr ""
-"Benutzer*innen, die den Space betreten bekommen die Rolle \"%s\". Eine "
-"Änderung des Passworts verändert auch den Einladungslink."
+#: includes/class-spaces-invitation.php:259
+msgid "Space User Access"
+msgstr "Space Beitrittsverfahren"
 
-#: includes/class-spaces-invitation.php:238
-msgid "Press Ctrl+C to copy."
-msgstr "Strg+C zum Kopieren."
+#: includes/class-spaces-invitation.php:268
+msgid "Deactivated"
+msgstr "Deaktiviert"
 
-#: includes/class-spaces-invitation.php:239
-msgid "Change Password"
-msgstr "Passwort ändern"
-
-#: includes/class-spaces-invitation.php:276
+#: includes/class-spaces-invitation.php:317
 msgid "Welcome! You successfully joined this Space."
 msgstr "Willkommen! Sie sind diesem Space erfolgreich beigetreten."
 
-#: includes/class-spaces-invitation.php:280
+#: includes/class-spaces-invitation.php:321
 msgid "You have left this Space."
 msgstr "Du hast diesen Space verlassen."
 
-#: includes/class-spaces-invitation.php:315
+#: includes/class-spaces-invitation.php:356
 msgid ""
 "You can't leave this Space because you are the last member who can manage "
 "users.\n"
@@ -51,51 +40,39 @@ msgstr ""
 "verwalten kann. Bitte füge andere Administrator*innen hinzu oder lösche "
 "diesen Space."
 
-#: includes/class-spaces-invitation.php:414
+#: includes/class-spaces-invitation.php:457
 msgid "Invitation Link and Password enabled"
 msgstr "Einladungslink und Passwort aktiviert."
 
-#: includes/class-spaces-invitation.php:415
+#: includes/class-spaces-invitation.php:458
 msgid "Invitation Link and Password disabled"
 msgstr "Einladungslink und Passwort deaktiviert."
 
-#: includes/class-spaces-invitation.php:418
+#: includes/class-spaces-invitation.php:461
 msgid "Self Registration enabled"
 msgstr "Selbstregistrierung aktiviert."
 
-#: includes/class-spaces-invitation.php:419
+#: includes/class-spaces-invitation.php:462
 msgid "Self Registration disabled"
 msgstr "Selbstregistrierung deaktiviert."
 
-#: includes/class-spaces-invitation.php:522
+#: includes/class-spaces-invitation.php:566
 msgid "You are not allowed to do that."
 msgstr "Du darfst das nicht."
 
-#: includes/class-spaces-invitation.php:563
+#: includes/class-spaces-invitation.php:624
 msgid "Join this space with a password"
 msgstr "Mit Passwort beitreten"
 
-#: includes/class-spaces-invitation.php:564
+#: includes/class-spaces-invitation.php:625
 msgid "Password"
 msgstr "Passwort"
 
-#: includes/class-spaces-invitation.php:565
+#: includes/class-spaces-invitation.php:626
 msgid "Join"
 msgstr "Beitreten"
 
-#: includes/class-spaces-invitation.php:735
-msgid "enabled"
-msgstr "aktiviert"
-
-#: includes/class-spaces-invitation.php:735
-msgid "disabled"
-msgstr "deaktiviert"
-
-#: includes/class-spaces-invitation.php:745
-msgid "Self-registration can not be enabled in private spaces."
-msgstr "Selbstregistrierung kann in privaten Spaces nicht aktiviert werden."
-
-#: includes/class-spaces-invitation.php:766
+#: includes/class-spaces-invitation.php:804
 msgid ""
 "You are currently logged in as a super-admin. Please use a regular account "
 "to collaborate."
@@ -103,11 +80,11 @@ msgstr ""
 "Sie sind derzeit als Superadministrator angemeldet. Bitte verwenden Sie ein "
 "reguläres Konto, um sich im Space zu beteiligen."
 
-#: includes/class-spaces-invitation.php:798
+#: includes/class-spaces-invitation.php:836
 msgid "Join this space"
 msgstr "Diesem Space beitreten"
 
-#: includes/class-spaces-invitation.php:799
+#: includes/class-spaces-invitation.php:837
 msgid ""
 "You become an author in this space and can write posts. You can leave the "
 "space again anytime you want."
@@ -115,17 +92,47 @@ msgstr ""
 "Sie werden Autor in diesem Space und können Beiträge schreiben. Sie können "
 "den Raum jederzeit wieder verlassen."
 
-#: includes/class-spaces-invitation.php:841
+#: includes/class-spaces-invitation.php:901
 msgid "Leave Space"
 msgstr "Diesen Space verlassen"
 
-#: includes/class-spaces-invitation.php:842
+#: includes/class-spaces-invitation.php:902
 msgid ""
 "Are you sure you want to leave this space? You will not be able to write "
 "posts or see private posts here anymore."
 msgstr ""
 "Willst du diesen Space wirklich verlassen? Dann kannst du keine Posts mehr "
 "schreiben und private Posts nicht mehr sehen."
+
+#: includes/class-spaces-invitation.php:1029
+#, php-format
+msgid ""
+"Users who click on the invitation link or enter the space via Password will "
+"be added with the role \"%s\".\n"
+"Changing the Password will change the inivitation link."
+msgstr ""
+"Benutzer*innen, die den Space betreten bekommen die Rolle \"%s\". Eine "
+"Änderung des Passworts verändert auch den Einladungslink."
+
+#: includes/class-spaces-invitation.php:1039
+msgid "Press Ctrl+C to copy."
+msgstr "Strg+C zum Kopieren."
+
+#: includes/class-spaces-invitation.php:1040
+msgid "Change Password"
+msgstr "Passwort ändern"
+
+#: includes/class-spaces-invitation.php:1045
+msgid "Invitation Link"
+msgstr "Einladungslink"
+
+#: includes/class-spaces-invitation.php:1051
+msgid "Self-registration can not be enabled in private spaces."
+msgstr "Selbstregistrierung kann in privaten Spaces nicht aktiviert werden."
+
+#: includes/class-spaces-invitation.php:1055
+msgid "Self Registration"
+msgstr "Selbstregistrierung"
 
 #. Name of the plugin
 msgid "Spaces Invitation"
