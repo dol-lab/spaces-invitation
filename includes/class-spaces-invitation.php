@@ -224,7 +224,7 @@ class Spaces_Invitation {
 	}
 
 	/**
-	 * Don't use this function. Use get_plugin_option('self_registration') instead.
+	 * Don't use this function. Use get_option('self_registration') instead.
 	 *
 	 * @param bool $filter wether the filter is_self_registration_enabled is applied.
 	 * @return bool
@@ -863,6 +863,9 @@ Please add somebody or delete this Space.",
 		wp_send_json( array( 'link' => get_home_url() . '?invitation_link=' . $token ) );
 	}
 
+	/**
+	 * @todo: this is something which should ony be in the theme (a special case which has a filter in theme).
+	 */
 	public function on_update_blog_public( $old_value, $new_value ) {
 		$self_registration_enabled = filter_var( get_option( 'self_registration', true ), FILTER_VALIDATE_BOOLEAN ); // don't use $this->get_plugin_option since the blog_public is already private
 		if ( $self_registration_enabled && self::PRIVATE === $new_value ) {
@@ -1072,7 +1075,6 @@ Changing the Access Code will change the Inivitation Link.',
 		if ( $old_value === $value ) {
 			return true;
 		}
-
-		return update_option( $name, $value ? 'true' : 'false' );
+		return update_option( $name, $value );
 	}
 }

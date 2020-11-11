@@ -18,6 +18,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/includes/class-spaces-invitation-settings.php';
+
 // Load plugin class files.
 require_once __DIR__ . '/includes/class-spaces-invitation-comparable.php';
 require_once __DIR__ . '/includes/class-spaces-invitation-request.php';
@@ -35,10 +37,8 @@ function spaces_invitation() {
 	$instance = Spaces_Invitation::instance( __FILE__, '1.0.0' );
 
 	if ( is_null( $instance->settings ) ) {
-		// $instance->settings = Spaces_Invitation_Settings::instance( $instance );
+		$instance->settings = Spaces_Invitation_Settings::instance( $instance );
 	}
-
-	return $instance;
 }
 
 spaces_invitation();
