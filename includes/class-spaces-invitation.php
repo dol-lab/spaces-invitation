@@ -7,7 +7,7 @@
  * @todo
  * - the plugin name is not really god. this is not only about invitation, but access in general.
  * - be more specific. get_invitation_link and the option should have a different name: "access_secret"?
- * - the while invitation_link vs. password is still confusing.
+ * - the while invitation_link vs. access code is still confusing.
  * - there should (probably) be nothing about privacy here
  */
 
@@ -306,7 +306,7 @@ class Spaces_Invitation {
 	}
 
 	private function get_invalid_invitation_link_message() {
-		return esc_html__( 'The password or invitation-link you used is not (or no longer) valid.' );
+		return esc_html__( 'The access code or invitation-link you used is not (or no longer) valid.' );
 	}
 
 	/**
@@ -454,8 +454,8 @@ Please add somebody or delete this Space.",
 			'INVITATION_TEXT_OPTIONS',
 			array(
 				'invitation'        => array(
-					'true'  => esc_html__( 'Invitation Link and Password enabled', 'spaces-invitation' ),
-					'false' => esc_html__( 'Invitation Link and Password disabled', 'spaces-invitation' ),
+					'true'  => esc_html__( 'Invitation Link and Access Code enabled', 'spaces-invitation' ),
+					'false' => esc_html__( 'Invitation Link and Access Code disabled', 'spaces-invitation' ),
 				),
 				'self_registration' => array(
 					'true'  => esc_html__( 'Self Registration enabled', 'spaces-invitation' ),
@@ -621,8 +621,8 @@ Please add somebody or delete this Space.",
 			'class' => '',
 			'error' => $this->invalid_invitation_link(),
 			'home_url' => get_home_url(),
-			'message'  => esc_html__( 'Join this space with a password', 'spaces-invitation' ),
-			'placeholder' => esc_attr__( 'Password', 'spaces-invitation' ),
+			'message'  => esc_html__( 'Join this Space with an Access Code', 'spaces-invitation' ),
+			'placeholder' => esc_attr__( 'Access Code', 'spaces-invitation' ),
 			'button_text' => esc_html__( 'Join', 'spaces-invitation' ),
 		);
 	}
@@ -796,7 +796,7 @@ Please add somebody or delete this Space.",
 	}
 
 	/**
-	 * Superadmins don't get a "join this space" - button or a password field.
+	 * Superadmins don't get a "join this space" - button or a access code field.
 	 */
 	public function superadmin_notice() {
 		if ( is_super_admin() ) {
@@ -835,7 +835,7 @@ Please add somebody or delete this Space.",
 			array(
 				'label' => esc_html__( 'Join this space', 'spaces-invitation' ),
 				'title' => esc_html__(
-					'You become an author in this space and can write posts. You can leave the space again anytime you want.',
+					'You become an Author in this Space and can write posts. You can leave the Space again anytime you want.',
 					'spaces-invitation'
 				),
 				'url'   => $this->get_full_invitation_link(),
@@ -900,7 +900,7 @@ Please add somebody or delete this Space.",
 				'data' => array(
 					'text' => __( 'Leave Space', 'spaces-invitation' ),
 					'confirm' => __(
-						'Are you sure you want to leave this space? You will not be able to write posts or see private posts here anymore.',
+						'Are you sure you want to leave this Space? You will not be able to write posts or see private posts here anymore.',
 						'spaces-invitation'
 					),
 					'url'  => get_home_url() . '?leave_space=true',
@@ -1027,8 +1027,8 @@ Please add somebody or delete this Space.",
 		$default_role = $this->translate_role( get_option( 'default_role' ) );
 		$description = sprintf(
 			esc_html__(
-				'Users who click on the invitation link or enter the space via Password will be added with the role "%s".
-Changing the Password will change the inivitation link.',
+				'Users who click on the Invitation Link or enter the Space via Access Code will be added with the role "%s".
+Changing the Access Code will change the Inivitation Link.',
 				'spaces-invitation'
 			),
 			$default_role
@@ -1037,7 +1037,7 @@ Changing the Password will change the inivitation link.',
 		$parameters = array(
 			'link' => $this->get_full_invitation_link(),
 			'copy_text' => esc_html__( 'Press Ctrl+C to copy.', 'spaces-invitation' ),
-			'change_password_text' => esc_html__( 'Change Password', 'spaces-invitation' ),
+			'change_password_text' => esc_html__( 'Change Access Code', 'spaces-invitation' ),
 			'style' => $active_value === $value ? 'display: block;' : '',
 			'description' => $description,
 		);
@@ -1048,7 +1048,7 @@ Changing the Password will change the inivitation link.',
 
 	private function create_self_registration_setting_option( string $active_value ) {
 		$value = 'self_registration';
-		$description = esc_html__( 'Self-registration can not be enabled in private spaces.', 'spaces-invitation' );
+		$description = esc_html__( 'Self-registration can not be enabled in private Spaces.', 'spaces-invitation' );
 
 		$option = $this->create_settings_option(
 			'invitation-status',
