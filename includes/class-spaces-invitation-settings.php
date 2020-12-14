@@ -82,7 +82,7 @@ class Spaces_Invitation_Settings {
 			return;
 		}
 		switch_to_blog( $blog_id );
-		$enabled = get_option( 'self_registration' );
+		$enabled = get_option( 'self_registration', true );
 		$desc = $enabled ? array(
 			'icon' => '✅',
 			'title' => 'enabled',
