@@ -224,7 +224,7 @@ class Spaces_Invitation {
 	}
 
 	/**
-	 * Don't use this function. Use get_option('self_registration') instead.
+	 * Don't use this function. Use get_option('self_registration', true) instead.
 	 *
 	 * @param bool $filter wether the filter is_self_registration_enabled is applied.
 	 * @return bool
