@@ -570,13 +570,11 @@ Please add somebody or delete this Space.",
 		}
 		$new_option = $_POST['option'];
 
-		$updated = array();
-
 		switch ( $new_option ) {
 			case 'none':
-				// deactivate all
-				$updated[] = $this->update_boolean_option( 'invitation_link_active', false );
-				$updated[] = $this->update_boolean_option( 'self_registration', false );
+				// deactivate all.
+				update_option( 'invitation_link_active', -1 );
+				update_option( 'self_registration', -1 ); // WP has issues with false, especially when default is not false...
 
 				break;
 			case 'self_registration':
@@ -584,13 +582,13 @@ Please add somebody or delete this Space.",
 					wp_send_json_error( array( 'message' => 'You are not allowed to do that.' ) );
 					return;
 				}
-				$updated[] = $this->update_boolean_option( 'invitation_link_active', true );
-				$updated[] = $this->update_boolean_option( 'self_registration', true );
+				update_option( 'invitation_link_active', true );
+				update_option( 'self_registration', true );
 
 				break;
 			case 'invitation_link':
-				$updated[] = $this->update_boolean_option( 'invitation_link_active', true );
-				$updated[] = $this->update_boolean_option( 'self_registration', false );
+				update_option( 'invitation_link_active', true );
+				update_option( 'self_registration', -1 );
 
 				break;
 			default:
@@ -598,17 +596,16 @@ Please add somebody or delete this Space.",
 				return;
 		}
 
-		if ( ! empty(
-			array_filter(
-				$updated,
-				function( $value ) {
-					return ! $value;}
-			)
-		) ) {
-			wp_send_json_error( array( 'message' => 'Could not update options.' ) );
-		} else {
-			wp_send_json( array( 'message' => 'Updated options to ' . $new_option ) );
-		}
+		wp_send_json_success(
+			array(
+				'message' => 'Updated options to ' . $new_option,
+				'data' => array(
+					'option_name' => $new_option,
+					'invitation_link_active' => get_option( 'invitation_link_active', true ),
+					'self_registration' => get_option( 'self_registration', true ),
+				),
+			) 
+		);
 	}
 
 	 /**
@@ -869,8 +866,8 @@ Please add somebody or delete this Space.",
 	public function on_update_blog_public( $old_value, $new_value ) {
 		$self_registration_enabled = filter_var( get_option( 'self_registration', true ), FILTER_VALIDATE_BOOLEAN ); // don't use $this->get_plugin_option since the blog_public is already private
 		if ( $self_registration_enabled && self::PRIVATE === $new_value ) {
-			update_option( 'self_registration', 'false', true );
-			update_option( 'invitation_link_active', 'false', true );
+			update_option( 'self_registration', -1, true );
+			update_option( 'invitation_link_active', -1, true );
 		}
 	}
 
@@ -1068,13 +1065,5 @@ Changing the Access Code will change the Inivitation Link.',
 				'description' => $description,
 			)
 		);
-	}
-
-	private function update_boolean_option( string $name, bool $value ) {
-		$old_value = filter_var( get_option( $name ), FILTER_VALIDATE_BOOLEAN );
-		if ( $old_value === $value ) {
-			return true;
-		}
-		return update_option( $name, $value );
 	}
 }
