@@ -1,13 +1,12 @@
 /* phpcs:ignore */
 
-#invitation-settings .label-wrapper {
+/* #invitation-settings .label-wrapper {
 	align-items: start;
-}
+} */
 
 #invitation-settings input.invitation-link {
 	cursor: text;
 	color: #888888;
-	padding: 0;
 	border: 0;
 	height: auto;
 	margin-top: 5px;
@@ -17,6 +16,10 @@
 
 #invitation-settings .has-tip {
 	cursor: text;
+}
+#invitation-settings .edit-link {
+	cursor: text;
+	margin-left: 1rem;
 }
 
 .menu.icon-left>li.invitation-hide,

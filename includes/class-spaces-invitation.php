@@ -604,7 +604,7 @@ Please add somebody or delete this Space.",
 					'invitation_link_active' => get_option( 'invitation_link_active', true ),
 					'self_registration' => get_option( 'self_registration', true ),
 				),
-			) 
+			)
 		);
 	}
 
@@ -828,7 +828,7 @@ Please add somebody or delete this Space.",
 		 * @todo: add title
 		 */
 		$join_button = $this->render(
-			'join',
+			'button',
 			array(
 				'label' => esc_html__( 'Join this space', 'spaces-invitation' ),
 				'title' => esc_html__(
@@ -836,9 +836,31 @@ Please add somebody or delete this Space.",
 					'spaces-invitation'
 				),
 				'url'   => $this->get_full_invitation_link(),
+				'class' => 'expanded',
 			)
 		);
-		return $message . $join_button;
+
+		$blog_id        = 'current_blog';
+		$subscribe      = class_exists( 's2class' ) ? new s2class() : false;
+		$show_nofify_me = $subscribe ? ! $subscribe->is_user_subscribed( 'current_user', 'current_blog' ) : false;
+
+		$notify_me = $this->render(
+			'button',
+			array(
+				'label' => "<label for='notification-toggle-join-{$blog_id}'><i class='fa fa-envelope'></i></label><input id='notification-toggle-join-{$blog_id}' data-blog-id='{$blog_id}' class='switch-input' type='checkbox' name='notification-toggle[]' $show_nofify_me>",
+				'title' => esc_html__(
+					'Notify Me!',
+					'spaces-invitation'
+				),
+				'url'   => 'javascript:void(0)',
+				'class' => implode( ' ', array('notification-toggle', "notification-toggle-wrapper-{$blog_id}", ! $show_nofify_me ? 'hide' : ''))
+			)
+		);
+		$buttons = $this->render(
+			'join',
+			array( 'html' => $join_button . $notify_me, )
+		);
+		return $message . $buttons;
 	}
 
 	/**
@@ -983,7 +1005,7 @@ Please add somebody or delete this Space.",
 		// var_dump($this->is_trying_to_register( $current_url_compare ), ! is_user_member_of_blog(), apply_filters( 'is_self_registration_enabled', false ));exit;
 		if ( $this->is_trying_to_register() ) {
 			$this->try_to_register();
-		} elseif ( ! is_user_member_of_blog() ) {
+		} elseif ( ! current_user_can( 'edit_posts' ) ) {
 			if ( $this->get_plugin_option( 'self_registration' ) ) {
 				add_filter( 'spaces_invitation_notices', array( $this, 'filter_join_this_space_notice' ) );
 				return;
