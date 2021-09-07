@@ -934,7 +934,7 @@ Please add somebody or delete this Space.",
 						class="alert"
 						onclick="return confirm(\'{{confirm}}\')"
 					>
-						<i class="fas fa-leaf"></i>{{ text }}
+						<i class="fas fa-door-open"></i>{{ text }}
 					</a>',
 			),
 		);
