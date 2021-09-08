@@ -121,8 +121,19 @@ jQuery(
     })
 
     window.addEventListener('notification-toggle', function (event) {
-      $(`.notification-toggle-wrapper-${event.detail.blog_id}`).toggleClass('hide', event.detail.task == 'subscribe')
+      $el = $(`.notification-toggle-wrapper-${event.detail.blog_id}`);
+      $el.toggleClass('hide', event.detail.task == 'subscribe')
     })
+    $(document).on('click', '.callout .close-button', (e) => {
+      if (typeof URLSearchParams !== 'undefined') {
+        let params = new URLSearchParams(window.location.search)
+        params.delete($(e.target).parents('.callout').attr('data-key'))
+        params = params.toString().length > 0 ? '?' + params.toString() : params.toString()
+        history.replaceState(null, '', params + location.hash)
+      } else {
+        console.log(`Your browser ${navigator.appVersion} does not support URLSearchParams`)
+      }
+    });
 
     addPasswordEditHook()
   })(jQuery)
