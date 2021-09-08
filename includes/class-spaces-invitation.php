@@ -306,7 +306,7 @@ class Spaces_Invitation {
 	}
 
 	private function get_invalid_invitation_link_message() {
-		return esc_html__( 'The access code or invitation-link you used is not (or no longer) valid.' );
+		return esc_html__( 'The access code or invitation-link you used is not (or no longer) valid.', 'spaces-invitation');
 	}
 
 	/**
