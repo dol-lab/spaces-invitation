@@ -2,12 +2,12 @@
 	<small>
 		{{ description }}
 	</small>
-	<div class="spaces-invitation-box padding-button spaces-invitation-link-box">
-		<span data-tooltip aria-haspopup="true" class="has-tip" data-disable-hover="false" tabindex="1"
+	<div class="spaces-invitation-box spaces-invitation-link-box icons icon-right">
+		<span data-tooltip aria-haspopup="true" class="has-tip flex-child-grow" data-disable-hover="false" tabindex="1"
 			title="{{copy_text}}">
-			<input onClick="this.select();" class="invitation-link" type="text" value="{{ link }}" readonly="true" />
+			<input onClick="this.select();" class="invitation-link padding-button" type="text" value="{{ link }}" readonly="true" />
 		</span>
-		<span data-tooltip aria-haspopup="true" class="has-tip" data-disable-hover="false" tabindex="1"
+		<span data-tooltip aria-haspopup="true" class="has-tip edit-link" data-disable-hover="false" tabindex="1"
 			title="{{change_password_text}}">
 			<i class="fa fa-edit invitation-edit-link"></i>
 		</span>

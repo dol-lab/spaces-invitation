@@ -1,6 +1,6 @@
-<div class="cell callout {{ type }}" data-closable>
-	<button class="close-button" aria-label="Dismiss alert" type="button" data-close>
+<div class="cell callout padding-button {{ type }}" data-closable data-key="{{ key }}">
+	<button class="close-button" aria-label="Dismiss alert" type="button" data-close style="top: 50%; transform: translateY(-50%);">
 		<span aria-hidden="true">&times;</span>
 	</button>
-	<p style="padding-right:10px">{{ message }}</p>
+	<p class="margin-right-2">{{ message }}</p>
 </div>

@@ -314,11 +314,11 @@ class Spaces_Invitation {
 	 */
 	public function add_notifications() {
 		if ( $this->req_get->get( 'invitation' ) === 'success' ) {
-			$this->add_callout( esc_html__( 'Welcome! You successfully joined this Space.', 'spaces-invitation' ) );
+			$this->add_callout( esc_html__( 'Welcome! You successfully joined this Space.', 'spaces-invitation' ), 'invitation' );
 		} elseif ( $this->req_get->get( 'invitation' ) === 'failed' ) {
-			$this->add_callout( $this->get_invalid_invitation_link_message(), 'alert' );
+			$this->add_callout( $this->get_invalid_invitation_link_message(), 'invitation', 'alert' );
 		} elseif ( $this->req_get->get( 'leave_space' ) === 'success' ) {
-			$this->add_callout( esc_html__( 'You have left this Space.', 'spaces-invitation' ) );
+			$this->add_callout( esc_html__( 'You have left this Space.', 'spaces-invitation' ), 'leave_space' );
 		}
 	}
 
@@ -328,7 +328,18 @@ class Spaces_Invitation {
 	 */
 	public function route() {
 		$this->maybe_leave_space();
-		$this->handle_invitation_link( $this->current_url_compare );
+		if ( $this->is_trying_to_register() ) {
+			$this->try_to_register();
+		}
+		if ( $this->show_invitation_link() && $this->current_url_compare->equals( wp_login_url() )) {
+			add_filter( 'more_privacy_custom_login_form', array( $this, 'add_password_form_backend' ) );
+		}
+		add_filter( 'spaces_invitation_notices', function($message) {
+			return $message . $this->get_join_notify_component();
+		} );
+		add_filter( 'spaces_invitation_notices', function($message) {
+			return $message . $this->superadmin_notice();
+		} );
 	}
 
 	/**
@@ -358,7 +369,7 @@ class Spaces_Invitation {
 Please add somebody or delete this Space.",
 				'spaces-invitation'
 			);
-			$this->add_callout( $msg, 'alert' );
+			$this->add_callout( $msg, '', 'alert' );
 		} else {
 			remove_user_from_blog( get_current_user_id() );
 			if ( wp_redirect( add_query_arg( 'leave_space', 'success', get_home_url() ) ) ) {
@@ -604,7 +615,7 @@ Please add somebody or delete this Space.",
 					'invitation_link_active' => get_option( 'invitation_link_active', true ),
 					'self_registration' => get_option( 'self_registration', true ),
 				),
-			) 
+			)
 		);
 	}
 
@@ -624,18 +635,62 @@ Please add somebody or delete this Space.",
 		);
 	}
 
+	 /**
+	  * Return data notification toggle / button template
+	  *
+	  * @return array
+	  */
+	private function get_notification_toggle_data() {
+		$notify_label = esc_html__(
+			'Notify Me!',
+			'spaces-invitation'
+		);
+		return array(
+			'blog_id' => 'current_blog',
+			'title' => $notify_label,
+			'checked' => $this->is_subscribed() ? 'checked' : '',
+			'class' => $this->is_subscribed() ? 'hide' : ''
+		);
+	}
+
+	 /**
+	  * Return join / notify component
+	  *
+	  * @return string
+	  */
+	public function get_join_notify_component() {
+		$join = $this->get_invitation_link_markup( $this->current_url_compare );
+
+		$can_join = $this->get_plugin_option( 'invitation_link_active' );
+		$nofication_template = $can_join ? 'notification_button' : 'notification_toggle';
+		$notify_me = ! current_user_can( 'publish_posts' ) ? $this->render( $nofication_template, $this->get_notification_toggle_data() ) : '';
+
+		if ($join == '' && $notify_me == '') {
+			return '';
+		}
+		return $this->render(
+			'join_notify_component',
+			array(
+				'join'   => $join,
+				'notify' => $notify_me
+			)
+		);
+	}
+
 	/**
 	 * Adds a password-form to the frontend-view.
 	 *
 	 * @param string $message
-	 * @return void
+	 * @return string
 	 */
-	public function add_password_form_frontend( string $message ) {
-		if ( $this->superadmin_notice() ) {
-			return $message . $this->superadmin_notice();
-		}
-		$form_data = $this->get_password_form_data();
-		return $message . $this->render( 'password_form_frontend', $form_data );
+	public function get_password_form_frontend() {
+		$join_password_form = $this->render(
+			'password_form_frontend',
+			$this->get_password_form_data()
+		);
+
+
+		return $join_password_form;
 	}
 
 	/**
@@ -761,8 +816,8 @@ Please add somebody or delete this Space.",
 		}
 	}
 
-	public function add_callout( $message, $type = 'success' ) {
-		add_filter( 'spaces_invitation_notices', $this->render_callout( $message, $type ) );
+	public function add_callout( $message, $key = '', $type = 'success' ) {
+		add_filter( 'spaces_invitation_notices', $this->render_callout( $message, $key, $type ), 9 );
 	}
 
 	/**
@@ -771,12 +826,13 @@ Please add somebody or delete this Space.",
 	 * @param string $message The message to be rendered.
 	 * @param string $type The class name of the callout ('success', 'primary', 'warning', 'alert')
 	 */
-	private function render_callout( $message, string $type = 'success' ) {
-		return function() use ( $message, $type ) {
-			return $this->render(
+	private function render_callout( $message, string $key = '', string $type = 'success' ) {
+		return function( $markup ) use ( $message, $key, $type ) {
+			return $markup . $this->render(
 				'callout',
 				array(
 					'message' => esc_html( $message ),
+					'key'     => $key,
 					'type'    => $type,
 				)
 			);
@@ -792,26 +848,52 @@ Please add somebody or delete this Space.",
 		return self::PRIVATE === (int) get_option( 'blog_public' );
 	}
 
+
+
+	/**
+	 * Check if current user is subscribed to blog
+	 *
+	 * @return  bool
+	 */
+
+	private function is_subscribed( $user_id = 'current_user', $blog_id = 'current_blog' ) {
+		return class_exists( 's2class' ) && new s2class() && (new s2class())->is_user_subscribed( $user_id, $blog_id );
+	}
+
+	/**
+	 * Check if current user is member of blog, but not a subscriber.
+	 *
+	 * @return  bool
+	 */
+	private function user_is_member_of_current_blog() {
+
+		$publish = current_user_can( 'publish_posts' );
+
+		$is_super_admin = is_super_admin();
+		$member_of_blog = is_user_member_of_blog();
+		$is_subscribed  = $this->is_subscribed();
+
+		return ( ! $is_super_admin && $publish ) || ( $is_super_admin && $member_of_blog && ! $is_subscribed );
+	}
+
 	/**
 	 * Superadmins don't get a "join this space" - button or a access code field.
+	 * @return string
 	 */
 	public function superadmin_notice() {
-		if ( is_super_admin() ) {
-			if ( ! is_user_member_of_blog() ) {
-				$callout_message = esc_html__(
-					'You are currently logged in as a super-admin. Please use a regular account to collaborate.',
-					'spaces-invitation'
-				);
-				return $this->render(
-					'callout',
-					array(
-						'message' => $callout_message,
-						'type'    => 'warning',
-					)
-				);
-
-			}
-			return; // superadmin is already a member.
+		if ( is_super_admin() && ! is_user_member_of_blog() ) {
+			$callout_message = esc_html__(
+				'You are currently logged in as a super-admin. Please use a regular account to collaborate.',
+				'spaces-invitation'
+			);
+			$callout = $this->render(
+				'callout',
+				array(
+					'message' => $callout_message,
+					'type'    => 'warning',
+				)
+			);
+			return $callout;
 		}
 	}
 
@@ -820,15 +902,13 @@ Please add somebody or delete this Space.",
 	 *
 	 * @param string $message The filter argument from spaces_invitation_notices.
 	 */
-	public function filter_join_this_space_notice( $message ) {
-		if ( $this->superadmin_notice() ) {
-			return $message . $this->superadmin_notice();
-		}
+	public function get_join_this_space_button() {
 		/**
 		 * @todo: add title
 		 */
+
 		$join_button = $this->render(
-			'join',
+			'button',
 			array(
 				'label' => esc_html__( 'Join this space', 'spaces-invitation' ),
 				'title' => esc_html__(
@@ -836,9 +916,10 @@ Please add somebody or delete this Space.",
 					'spaces-invitation'
 				),
 				'url'   => $this->get_full_invitation_link(),
+				'class' => 'expanded',
 			)
 		);
-		return $message . $join_button;
+		return $join_button;
 	}
 
 	/**
@@ -889,7 +970,7 @@ Please add somebody or delete this Space.",
 	 * Called by add_settings_item to add the leave space button if neccessary.
 	 */
 	private function build_leave_space_items() {
-		if ( ! is_user_member_of_blog( get_current_user_id() ) ) {
+		if ( ! current_user_can( 'publish_posts' ) ) {
 			return array();
 		}
 
@@ -912,7 +993,7 @@ Please add somebody or delete this Space.",
 						class="alert"
 						onclick="return confirm(\'{{confirm}}\')"
 					>
-						<i class="fas fa-leaf"></i>{{ text }}
+						<i class="fas fa-door-open"></i>{{ text }}
 					</a>',
 			),
 		);
@@ -937,15 +1018,6 @@ Please add somebody or delete this Space.",
 			&& ! is_super_admin();
 	}
 
-	/**
-	 * Adds a form to enter the invitation token for the appropriate places.
-	 */
-	private function add_invitation_form() {
-		if ( $this->current_url_compare->equals( wp_login_url() ) ) {
-			add_filter( 'more_privacy_custom_login_form', array( $this, 'add_password_form_backend' ) );
-		}
-		add_filter( 'spaces_invitation_notices', array( $this, 'add_password_form_frontend' ) );
-	}
 
 	/**
 	 * Try to register the current user to the current space.
@@ -974,23 +1046,27 @@ Please add somebody or delete this Space.",
 	}
 
 	/**
-	 * Checks if the user is trying to register and adds a form if not.
+	 * @return boolean
 	 */
-	private function handle_invitation_link() {
-		if ( ! $this->get_plugin_option( 'invitation_link_active' ) ) {
-			return;
+	public function show_invitation_link() {
+		return
+			! $this->user_is_member_of_current_blog() &&
+			! $this->superadmin_notice() &&
+			$this->get_plugin_option( 'invitation_link_active' );
+	}
+
+	/**
+	 * Checks if the user is trying to register and adds a form if not.
+	 * @return string
+	 */
+	private function get_invitation_link_markup() {
+		if ( ! $this->show_invitation_link() ) {
+			return '';
 		}
-		// var_dump($this->is_trying_to_register( $current_url_compare ), ! is_user_member_of_blog(), apply_filters( 'is_self_registration_enabled', false ));exit;
-		if ( $this->is_trying_to_register() ) {
-			$this->try_to_register();
-		} elseif ( ! is_user_member_of_blog() ) {
-			if ( $this->get_plugin_option( 'self_registration' ) ) {
-				add_filter( 'spaces_invitation_notices', array( $this, 'filter_join_this_space_notice' ) );
-				return;
-			} else {
-				$this->add_invitation_form( $this->current_url_compare );
-			}
+		if ( $this->get_plugin_option( 'self_registration' ) ) {
+			return $this->get_join_this_space_button();
 		}
+		return $this->get_password_form_frontend();
 	}
 
 	private function create_settings_option( string $input_name, string $text, string $active_value, string $value, string $icon ) {
