@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Spaces Invitation\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-11-10 15:29+0000\n"
-"PO-Revision-Date: 2020-11-10 15:30+0000\n"
+"PO-Revision-Date: 2021-04-28 23:52+0000\n"
 "Last-Translator: ifs admin\n"
 "Language-Team: German\n"
 "Language: de_DE\n"
@@ -14,97 +14,12 @@ msgstr ""
 "X-Generator: Loco https://localise.biz/\n"
 "X-Loco-Version: 2.4.4; wp-5.5.3"
 
-#: includes/class-spaces-invitation.php:259
-msgid "Space User Access"
-msgstr "Space Beitrittsverfahren"
-
-#: includes/class-spaces-invitation.php:268
-msgid "Deactivated"
-msgstr "Deaktiviert"
-
-#: includes/class-spaces-invitation.php:317
-msgid "Welcome! You successfully joined this Space."
-msgstr "Willkommen! Sie sind diesem Space erfolgreich beigetreten."
-
-#: includes/class-spaces-invitation.php:321
-msgid "You have left this Space."
-msgstr "Du hast diesen Space verlassen."
-
-#: includes/class-spaces-invitation.php:356
-msgid ""
-"You can't leave this Space because you are the last member who can manage "
-"users.\n"
-"Please add somebody or delete this Space."
-msgstr ""
-"Du kannst diesen Space nicht verlassen, da sonst niemand mehr Nutzer*innen "
-"verwalten kann. Bitte füge andere Administrator*innen hinzu oder lösche "
-"diesen Space."
-
-#: includes/class-spaces-invitation.php:457
-msgid "Invitation Link and Access Code enabled"
-msgstr "Einladungslink und Passwort aktiviert."
-
-#: includes/class-spaces-invitation.php:458
-msgid "Invitation Link and Access Code disabled"
-msgstr "Einladungslink und Passwort deaktiviert."
-
-#: includes/class-spaces-invitation.php:461
-msgid "Self Registration enabled"
-msgstr "Selbstregistrierung aktiviert."
-
-#: includes/class-spaces-invitation.php:462
-msgid "Self Registration disabled"
-msgstr "Selbstregistrierung deaktiviert."
-
-#: includes/class-spaces-invitation.php:566
-msgid "You are not allowed to do that."
-msgstr "Du darfst das nicht."
-
-#: includes/class-spaces-invitation.php:624
-#, fuzzy
-#| msgid "Join this space with an Access Code"
-msgid "Join this Space with an Access Code"
-msgstr "Dem Space mit einem Zugangscode beitreten"
-
-#: includes/class-spaces-invitation.php:625
+#: includes/class-spaces-invitation.php:622
 msgid "Access Code"
 msgstr "Zugangscode"
 
-#: includes/class-spaces-invitation.php:626
-msgid "Join"
-msgstr "Beitreten"
-
-#: includes/class-spaces-invitation.php:804
-msgid ""
-"You are currently logged in as a super-admin. Please use a regular account "
-"to collaborate."
-msgstr ""
-"Sie sind derzeit als Superadministrator angemeldet. Bitte verwenden Sie ein "
-"reguläres Konto, um sich im Space zu beteiligen."
-
-#: includes/class-spaces-invitation.php:836
-msgid "Join this space"
-msgstr "Diesem Space beitreten"
-
-#: includes/class-spaces-invitation.php:837
-#, fuzzy
-#| "You become an author in this space and can write posts. You can leave the "
-#| "space again anytime you want."
-msgid ""
-"You become an Author in this Space and can write posts. You can leave the "
-"Space again anytime you want."
-msgstr ""
-"Sie werden Autor in diesem Space und können Beiträge schreiben. Sie können "
-"den Raum jederzeit wieder verlassen."
-
-#: includes/class-spaces-invitation.php:901
-msgid "Leave Space"
-msgstr "Diesen Space verlassen"
-
 #: includes/class-spaces-invitation.php:902
 #, fuzzy
-#| "Are you sure you want to leave this space? You will not be able to write "
-#| "posts or see private posts here anymore."
 msgid ""
 "Are you sure you want to leave this Space? You will not be able to write "
 "posts or see private posts here anymore."
@@ -112,11 +27,93 @@ msgstr ""
 "Willst du diesen Space wirklich verlassen? Dann kannst du keine Posts mehr "
 "schreiben und private Posts nicht mehr sehen."
 
+#: includes/class-spaces-invitation.php:1040
+msgid "Change Access Code"
+msgstr "Zugangscode ändern"
+
+#: includes/class-spaces-invitation.php:268
+msgid "Deactivated"
+msgstr "Deaktiviert"
+
+#. Author URI of the plugin
+msgid "https://github.com/dol-lab"
+msgstr "https://github.com/dol-lab"
+
+#. URI of the plugin
+msgid "https://github.com/dol-lab/spaces-invitation"
+msgstr "https://github.com/dol-lab/spaces-invitation"
+
+#: includes/class-spaces-invitation.php:1045
+msgid "Invitation Link"
+msgstr "Einladungslink"
+
+#: includes/class-spaces-invitation.php:458
+msgid "Invitation Link and Access Code disabled"
+msgstr "Einladungslink und Passwort deaktiviert."
+
+#: includes/class-spaces-invitation.php:457
+msgid "Invitation Link and Access Code enabled"
+msgstr "Einladungslink und Passwort aktiviert."
+
+#: includes/class-spaces-invitation.php:623
+msgid "Join"
+msgstr "Beitreten"
+
+#: includes/class-spaces-invitation.php:833
+msgid "Join this space"
+msgstr "Diesem Space beitreten"
+
+#: includes/class-spaces-invitation.php:621
+#, fuzzy
+#| msgid "Join this space with an Access Code"
+msgid "Join this Space with an Access Code"
+msgstr "Dem Space mit einem Zugangscode beitreten"
+
+#: includes/class-spaces-invitation.php:901
+msgid "Leave Space"
+msgstr "Diesen Space verlassen"
+
+#. Description of the plugin
+msgid "Manages Invitations to Spaces."
+msgstr "Verwaltet Einladungen zu Räumen."
+
+#: includes/class-spaces-invitation.php:1039
+msgid "Press Ctrl+C to copy."
+msgstr "Strg+C zum Kopieren."
+
+#: includes/class-spaces-invitation-settings.php:69
+#: includes/class-spaces-invitation.php:1055
+msgid "Self Registration"
+msgstr "Selbstregistrierung"
+
+#: includes/class-spaces-invitation.php:462
+msgid "Self Registration disabled"
+msgstr "Selbstregistrierung deaktiviert."
+
+#: includes/class-spaces-invitation.php:461
+msgid "Self Registration enabled"
+msgstr "Selbstregistrierung aktiviert."
+
+#: includes/class-spaces-invitation.php:1051
+#, fuzzy
+#| msgid "Self-registration can not be enabled in private spaces."
+msgid "Self-registration can not be enabled in private Spaces."
+msgstr "Selbstregistrierung kann in privaten Spaces nicht aktiviert werden."
+
+#: includes/class-spaces-invitation.php:259
+msgid "Space User Access"
+msgstr "Space Beitrittsverfahren"
+
+#. Name of the plugin
+msgid "Spaces Invitation"
+msgstr "Space Einladung"
+
 #: includes/class-spaces-invitation.php:1029
 #, fuzzy, php-format
-#| "Users who click on the invitation link or enter the space via access code "
+#| msgid ""
+#| "Users who click on the Invitation Link or enter the Space via Access Code "
 #| "will be added with the role \"%s\".\n"
-#| "Changing the access code will change the inivitation link."
+#| "Changing the Access Code will change the Inivitation Link."
 msgid ""
 "Users who click on the Invitation Link or enter the Space via Access Code "
 "will be added with the role \"%s\".\n"
@@ -126,40 +123,46 @@ msgstr ""
 "eingeben werden mit der Role \"%s\" hinzugefügt.\n"
 "Beim Ändern der Zugangscode wird auch der Einladungslink geändert. \n"
 
-#: includes/class-spaces-invitation.php:1039
-msgid "Press Ctrl+C to copy."
-msgstr "Strg+C zum Kopieren."
+#: includes/class-spaces-invitation.php:317
+msgid "Welcome! You successfully joined this Space."
+msgstr "Willkommen! Sie sind diesem Space erfolgreich beigetreten."
 
-#: includes/class-spaces-invitation.php:1040
-msgid "Change Access Code"
-msgstr "Zugangscode ändern"
+#: includes/class-spaces-invitation.php:801
+msgid ""
+"You are currently logged in as a super-admin. Please use a regular account "
+"to collaborate."
+msgstr ""
+"Sie sind derzeit als Superadministrator angemeldet. Bitte verwenden Sie ein "
+"reguläres Konto, um sich im Space zu beteiligen."
 
-#: includes/class-spaces-invitation.php:1045
-msgid "Invitation Link"
-msgstr "Einladungslink"
+#: includes/class-spaces-invitation.php:566
+msgid "You are not allowed to do that."
+msgstr "Du darfst das nicht."
 
-#: includes/class-spaces-invitation.php:1051
+#: includes/class-spaces-invitation.php:834
 #, fuzzy
-#| msgid "Self-registration can not be enabled in private spaces."
-msgid "Self-registration can not be enabled in private Spaces."
-msgstr "Selbstregistrierung kann in privaten Spaces nicht aktiviert werden."
+msgid ""
+"You become an Author in this Space and can write posts. You can leave the "
+"Space again anytime you want."
+msgstr ""
+"Sie werden Autor in diesem Space und können Beiträge schreiben. Sie können "
+"den Raum jederzeit wieder verlassen."
 
-#: includes/class-spaces-invitation.php:1055
-msgid "Self Registration"
-msgstr "Selbstregistrierung"
+#: includes/class-spaces-invitation.php:356
+#, fuzzy
+#| msgid ""
+#| "You can't leave this Space because you are the last member who can manage "
+#| "users.\n"
+#| "Please add somebody or delete this Space."
+msgid ""
+"You can't leave this Space because you are the last member who can manage "
+"users.\n"
+"Please add somebody or delete this Space."
+msgstr ""
+"Du kannst diesen Space nicht verlassen, da sonst niemand mehr Nutzer*innen "
+"verwalten kann. Bitte füge andere Administrator*innen hinzu oder lösche "
+"diesen Space."
 
-#. Name of the plugin
-msgid "Spaces Invitation"
-msgstr "Space Einladung"
-
-#. Description of the plugin
-msgid "Manages Invitations to Spaces."
-msgstr "Verwaltet Einladungen zu Räumen."
-
-#. URI of the plugin
-msgid "https://github.com/dol-lab/spaces-invitation"
-msgstr "https://github.com/dol-lab/spaces-invitation"
-
-#. Author URI of the plugin
-msgid "https://github.com/dol-lab"
-msgstr "https://github.com/dol-lab"
+#: includes/class-spaces-invitation.php:321
+msgid "You have left this Space."
+msgstr "Du hast diesen Space verlassen."
