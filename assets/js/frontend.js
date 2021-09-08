@@ -32,13 +32,13 @@ jQuery(
         return
       }
 
-      edit.addEventListener('click', function () {
+      edit.addEventListener('click', function (e) {
         var node = document.createElement('div')
         var input = document.createElement('input')
         var button = document.createElement('button')
-        button.classList.add('button')
+        button.classList.add('button', 'small')
         button.textContent = 'Save'
-        node.classList.add('spaces-invitation-edit-modal')
+        node.classList.add('input-group', 'margin-top-1')
         input.type = 'text'
         input.value = currentToken
         node.appendChild(input)
@@ -68,7 +68,7 @@ jQuery(
 
         document.addEventListener('click', removeSelf)
 
-        this.parentNode.appendChild(node)
+        $(e.target).parents('.spaces-invitation-box').after(node)
 
         input.select()
       })
