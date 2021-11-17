@@ -120,10 +120,11 @@ jQuery(
       })
     })
 
-    window.addEventListener('notification-toggle', function (event) {
+    /* window.addEventListener('notification-toggle', function (event) {
       $el = $(`.notification-toggle-wrapper-${event.detail.blog_id}`);
       $el.toggleClass('hide', event.detail.task == 'subscribe')
-    })
+    }) */
+
     $(document).on('click', '.callout .close-button', (e) => {
       if (typeof URLSearchParams !== 'undefined') {
         let params = new URLSearchParams(window.location.search)
