@@ -1,6 +1,6 @@
 <div class="cell card static padding-button " id="notification-toogle-switch">
 	<label class="icon-left label-wrapper" for="notification-toggle-join-{{ blog_id }}">
-		<i class="fa fa-envelope"></i>
+		<i class="fa fa-envelope" aria-hidden="true"></i>
 		<span>{{ title }}</span>
 		<div class="switch small notification-toggle success" title="{{ title }}">
 			<input id='notification-toggle-join-{{ blog_id }}' data-blog-id='{{ blog_id }}' class='switch-input' type='checkbox' name='notification-toggle[]' {{checked}}>
