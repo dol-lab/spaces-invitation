@@ -832,6 +832,7 @@ Please add somebody or delete this Space.",
 				'callout',
 				array(
 					'message' => esc_html( $message ),
+					'close'   => esc_html__( 'Dismiss alert', 'spaces-invitation' ),
 					'key'     => $key,
 					'type'    => $type,
 				)
