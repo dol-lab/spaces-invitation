@@ -3,22 +3,17 @@ msgstr ""
 "Project-Id-Version: Spaces Invitation\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-11-10 15:29+0000\n"
-"PO-Revision-Date: 2022-03-09 02:47+0000\n"
-"Last-Translator: ifs admin\n"
-"Language-Team: Deutsch\n"
 "Language: de_DE\n"
+"Language-Team: Deutsch\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Loco https://localise.biz/\n"
-"X-Loco-Version: 2.4.4; wp-5.5.3"
+"PO-Revision-Date: 2022-03-09 03:50+0000\n"
+"X-Generator: Loco https://localise.biz/"
 
 #: includes/class-spaces-invitation.php:633
 msgid "Access Code"
 msgstr "Zugangscode"
 
-#: includes/class-spaces-invitation.php:983
+#: includes/class-spaces-invitation.php:984
 #, fuzzy
 msgid ""
 "Are you sure you want to leave this Space? You will not be able to write "
@@ -27,13 +22,17 @@ msgstr ""
 "Willst du diesen Space wirklich verlassen? Dann kannst du keine Posts mehr "
 "schreiben und private Posts nicht mehr sehen."
 
-#: includes/class-spaces-invitation.php:1116
+#: includes/class-spaces-invitation.php:1117
 msgid "Change Access Code"
 msgstr "Zugangscode ändern"
 
 #: includes/class-spaces-invitation.php:268
 msgid "Deactivated"
 msgstr "Deaktiviert"
+
+#: includes/class-spaces-invitation.php:835
+msgid "Dismiss alert"
+msgstr "Hinweis schließen"
 
 #. Author URI of the plugin
 msgid "https://github.com/dol-lab"
@@ -43,7 +42,7 @@ msgstr "https://github.com/dol-lab"
 msgid "https://github.com/dol-lab/spaces-invitation"
 msgstr "https://github.com/dol-lab/spaces-invitation"
 
-#: includes/class-spaces-invitation.php:1121
+#: includes/class-spaces-invitation.php:1122
 msgid "Invitation Link"
 msgstr "Einladungslink"
 
@@ -59,7 +58,7 @@ msgstr "Einladungslink und Passwort aktiviert."
 msgid "Join"
 msgstr "Beitreten"
 
-#: includes/class-spaces-invitation.php:913
+#: includes/class-spaces-invitation.php:914
 msgid "Join this space"
 msgstr "Diesem Space beitreten"
 
@@ -69,7 +68,7 @@ msgstr "Diesem Space beitreten"
 msgid "Join this Space with an Access Code"
 msgstr "Dem Space mit einem Zugangscode beitreten"
 
-#: includes/class-spaces-invitation.php:982
+#: includes/class-spaces-invitation.php:983
 msgid "Leave Space"
 msgstr "Diesen Space verlassen"
 
@@ -81,12 +80,12 @@ msgstr "Verwaltet Einladungen zu Räumen."
 msgid "Notify Me!"
 msgstr "Benachrichtige mich!"
 
-#: includes/class-spaces-invitation.php:1115
+#: includes/class-spaces-invitation.php:1116
 msgid "Press Ctrl+C to copy."
 msgstr "Strg+C zum Kopieren."
 
 #: includes/class-spaces-invitation-settings.php:69
-#: includes/class-spaces-invitation.php:1131
+#: includes/class-spaces-invitation.php:1132
 msgid "Self Registration"
 msgstr "Selbstregistrierung"
 
@@ -98,7 +97,7 @@ msgstr "Selbstregistrierung deaktiviert."
 msgid "Self Registration enabled"
 msgstr "Selbstregistrierung aktiviert."
 
-#: includes/class-spaces-invitation.php:1127
+#: includes/class-spaces-invitation.php:1128
 #, fuzzy
 #| msgid "Self-registration can not be enabled in private spaces."
 msgid "Self-registration can not be enabled in private Spaces."
@@ -116,9 +115,10 @@ msgstr "Space Einladung"
 msgid ""
 "The access code or invitation-link you used is not (or no longer) valid."
 msgstr ""
-"Der verwendete Zugangsschlüssel oder Einladungslink ist nicht (mehr) gültig. "
+"Der verwendete Zungang-Schlüssel oder Einladungslink ist nicht (mehr) gültig."
+" "
 
-#: includes/class-spaces-invitation.php:1105
+#: includes/class-spaces-invitation.php:1106
 #, fuzzy, php-format
 #| msgid ""
 #| "Users who click on the Invitation Link or enter the Space via Access Code "
@@ -137,7 +137,7 @@ msgstr ""
 msgid "Welcome! You successfully joined this Space."
 msgstr "Willkommen! Sie sind diesem Space erfolgreich beigetreten."
 
-#: includes/class-spaces-invitation.php:885
+#: includes/class-spaces-invitation.php:886
 msgid ""
 "You are currently logged in as a super-admin. Please use a regular account "
 "to collaborate."
@@ -149,7 +149,7 @@ msgstr ""
 msgid "You are not allowed to do that."
 msgstr "Du darfst das nicht."
 
-#: includes/class-spaces-invitation.php:914
+#: includes/class-spaces-invitation.php:915
 #, fuzzy
 msgid ""
 "You become an Author in this Space and can write posts. You can leave the "

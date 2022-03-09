@@ -259,7 +259,7 @@ class Spaces_Invitation {
 			$title = esc_html__( 'Space User Access', 'spaces-invitation' );
 			$settings_items[] = array(
 				'id' => 'invitation-settings',
-				'html' => '<a><i class="fa fa-link"></i><span>' . $title . '</span></a>',
+				'html' => '<a><i class="fa fa-link" aria-hidden="true"></i><span>' . $title . '</span></a>',
 				'children' => array(
 					array(
 						'id' => 'invitation-item',
@@ -832,6 +832,7 @@ Please add somebody or delete this Space.",
 				'callout',
 				array(
 					'message' => esc_html( $message ),
+					'close'   => esc_html__( 'Dismiss alert', 'spaces-invitation' ),
 					'key'     => $key,
 					'type'    => $type,
 				)
@@ -993,7 +994,7 @@ Please add somebody or delete this Space.",
 						class="alert"
 						onclick="return confirm(\'{{confirm}}\')"
 					>
-						<i class="fas fa-door-open"></i>{{ text }}
+						<i class="fas fa-door-open" aria-hidden="true"></i>{{ text }}
 					</a>',
 			),
 		);
