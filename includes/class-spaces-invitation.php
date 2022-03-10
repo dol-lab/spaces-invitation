@@ -203,9 +203,9 @@ class Spaces_Invitation {
 	 */
 	private function get_plugin_option( $option_name ) {
 		$opts = array(
-			'invitation_link' => $this->get_invitation_link(),
+			'invitation_link'        => $this->get_invitation_link(),
 			'invitation_link_active' => filter_var( get_option( 'invitation_link_active', true ), FILTER_VALIDATE_BOOLEAN ),
-			'self_registration' => $this->self_reg_enabled(),
+			'self_registration'      => $this->self_reg_enabled(),
 		);
 
 		if ( ! array_key_exists( $option_name, $opts ) ) {
@@ -216,7 +216,7 @@ class Spaces_Invitation {
 		 * The 'self_registration'-option is dominant, it changes the other options, if it's true.
 		 */
 		if ( $opts['self_registration'] ) {
-			$opts['invitation_link'] = 'welcome'; // don't expose a previously set user password.
+			$opts['invitation_link']        = 'welcome'; // don't expose a previously set user password.
 			$opts['invitation_link_active'] = true; // the link is active, if self_registration is enabled.
 		}
 		return $opts[ $option_name ];
@@ -256,14 +256,14 @@ class Spaces_Invitation {
 	public function add_settings_item( $settings_items ) {
 		if ( $this->can_change_invitation_options() ) {
 			$active = $this->get_active_option();
-			$title = esc_html__( 'Space User Access', 'spaces-invitation' );
+			$title  = esc_html__( 'Space User Access', 'spaces-invitation' );
 			$settings_items[] = array(
-				'id' => 'invitation-settings',
-				'html' => '<a><i class="fa fa-link" aria-hidden="true"></i><span>' . $title . '</span></a>',
+				'id'       => 'invitation-settings',
+				'html'     => '<a><i class="fa fa-link" aria-hidden="true"></i><span>' . $title . '</span></a>',
 				'children' => array(
 					array(
-						'id' => 'invitation-item',
-						'html' => $this->create_settings_option(
+						'id'    => 'invitation-item',
+						'html'  => $this->create_settings_option(
 							'invitation-status',
 							esc_html__( 'Deactivated', 'spaces-invitation' ),
 							$active,
@@ -273,13 +273,13 @@ class Spaces_Invitation {
 						'class' => 'success radio-accordion radio-accordion-item',
 					),
 					array(
-						'id' => 'invitation-item2',
-						'html' => $this->create_invitation_link_settings_option( $active ),
+						'id'    => 'invitation-item2',
+						'html'  => $this->create_invitation_link_settings_option( $active ),
 						'class' => 'success radio-accordion radio-accordion-item',
 					),
 					array(
-						'id' => 'invitation-item3',
-						'html' => $this->create_self_registration_setting_option( $active ),
+						'id'    => 'invitation-item3',
+						'html'  => $this->create_self_registration_setting_option( $active ),
 						'class' => 'success radio-accordion radio-accordion-item',
 					),
 				),
@@ -306,7 +306,7 @@ class Spaces_Invitation {
 	}
 
 	private function get_invalid_invitation_link_message() {
-		return esc_html__( 'The access code or invitation-link you used is not (or no longer) valid.', 'spaces-invitation');
+		return esc_html__( 'The access code or invitation-link you used is not (or no longer) valid.', 'spaces-invitation' );
 	}
 
 	/**
@@ -331,15 +331,21 @@ class Spaces_Invitation {
 		if ( $this->is_trying_to_register() ) {
 			$this->try_to_register();
 		}
-		if ( $this->show_invitation_link() && $this->current_url_compare->equals( wp_login_url() )) {
+		if ( $this->show_invitation_link() && $this->current_url_compare->equals( wp_login_url() ) ) {
 			add_filter( 'more_privacy_custom_login_form', array( $this, 'add_password_form_backend' ) );
 		}
-		add_filter( 'spaces_invitation_notices', function($message) {
-			return $message . $this->get_join_notify_component();
-		} );
-		add_filter( 'spaces_invitation_notices', function($message) {
-			return $message . $this->superadmin_notice();
-		} );
+		add_filter(
+			'spaces_invitation_notices',
+			function( $message ) {
+				return $message . $this->get_join_notify_component();
+			}
+		);
+		add_filter(
+			'spaces_invitation_notices',
+			function( $message ) {
+				return $message . $this->superadmin_notice();
+			}
+		);
 	}
 
 	/**
@@ -356,8 +362,8 @@ class Spaces_Invitation {
 		 * - Enables the ‘Add Existing User’ to function for multi-site installs.
 		 * - Enables the “Change role to…” dropdown in the admin user list
 		 */
-		$cap = 'promote_users';
-		$admins = $this->get_users_by_capability( $cap );
+		$cap      = 'promote_users';
+		$admins   = $this->get_users_by_capability( $cap );
 		$is_admin = current_user_can( $cap );
 
 		/**
@@ -397,7 +403,7 @@ Please add somebody or delete this Space.",
 			$users = get_users(
 				array(
 					'role__in' => $role__in,
-					'fields' => 'ids',
+					'fields'   => 'ids',
 				)
 			);
 		}
@@ -610,10 +616,10 @@ Please add somebody or delete this Space.",
 		wp_send_json_success(
 			array(
 				'message' => 'Updated options to ' . $new_option,
-				'data' => array(
-					'option_name' => $new_option,
+				'data'    => array(
+					'option_name'            => $new_option,
 					'invitation_link_active' => get_option( 'invitation_link_active', true ),
-					'self_registration' => get_option( 'self_registration', true ),
+					'self_registration'      => get_option( 'self_registration', true ),
 				),
 			)
 		);
@@ -626,10 +632,10 @@ Please add somebody or delete this Space.",
 	  */
 	private function get_password_form_data() {
 		return array(
-			'class' => '',
-			'error' => $this->invalid_invitation_link(),
-			'home_url' => get_home_url(),
-			'message'  => esc_html__( 'Join this Space with an Access Code', 'spaces-invitation' ),
+			'class'       => '',
+			'error'       => $this->invalid_invitation_link(),
+			'home_url'    => get_home_url(),
+			'message'     => esc_html__( 'Join this Space with an Access Code', 'spaces-invitation' ),
 			'placeholder' => esc_attr__( 'Access Code', 'spaces-invitation' ),
 			'button_text' => esc_html__( 'Join', 'spaces-invitation' ),
 		);
@@ -647,9 +653,9 @@ Please add somebody or delete this Space.",
 		);
 		return array(
 			'blog_id' => 'current_blog',
-			'title' => $notify_label,
+			'title'   => $notify_label,
 			'checked' => $this->is_subscribed() ? 'checked' : '',
-			'class' => $this->is_subscribed() ? 'hide' : ''
+			'class'   => $this->is_subscribed() ? 'hide' : '',
 		);
 	}
 
@@ -665,14 +671,14 @@ Please add somebody or delete this Space.",
 		$nofication_template = $can_join ? 'notification_button' : 'notification_toggle';
 		$notify_me = ! current_user_can( 'publish_posts' ) ? $this->render( $nofication_template, $this->get_notification_toggle_data() ) : '';
 
-		if ($join == '' && $notify_me == '') {
+		if ( $join == '' && $notify_me == '' ) {
 			return '';
 		}
 		return $this->render(
 			'join_notify_component',
 			array(
 				'join'   => $join,
-				'notify' => $notify_me
+				'notify' => $notify_me,
 			)
 		);
 	}
@@ -688,7 +694,6 @@ Please add somebody or delete this Space.",
 			'password_form_frontend',
 			$this->get_password_form_data()
 		);
-
 
 		return $join_password_form;
 	}
@@ -858,7 +863,7 @@ Please add somebody or delete this Space.",
 	 */
 
 	private function is_subscribed( $user_id = 'current_user', $blog_id = 'current_blog' ) {
-		return class_exists( 's2class' ) && new s2class() && (new s2class())->is_user_subscribed( $user_id, $blog_id );
+		return class_exists( 's2class' ) && new s2class() && ( new s2class() )->is_user_subscribed( $user_id, $blog_id );
 	}
 
 	/**
@@ -879,6 +884,7 @@ Please add somebody or delete this Space.",
 
 	/**
 	 * Superadmins don't get a "join this space" - button or a access code field.
+	 *
 	 * @return string
 	 */
 	public function superadmin_notice() {
@@ -962,7 +968,7 @@ Please add somebody or delete this Space.",
 		wp_send_json(
 			array(
 				'disabled_options' => $this->get_disabled_options(),
-				'active_option' => $this->get_active_option(),
+				'active_option'    => $this->get_active_option(),
 			)
 		);
 	}
@@ -977,17 +983,17 @@ Please add somebody or delete this Space.",
 
 		return array(
 			array(
-				'id'   => 'leave-space-item',
+				'id'    => 'leave-space-item',
 				'order' => 15,
-				'data' => array(
-					'text' => __( 'Leave Space', 'spaces-invitation' ),
+				'data'  => array(
+					'text'    => __( 'Leave Space', 'spaces-invitation' ),
 					'confirm' => __(
 						'Are you sure you want to leave this Space? You will not be able to write posts or see private posts here anymore.',
 						'spaces-invitation'
 					),
-					'url'  => get_home_url() . '?leave_space=true',
+					'url'     => get_home_url() . '?leave_space=true',
 				),
-				'html' => '
+				'html'  => '
 					<a
 						href="{{ url }}"
 						title="Click here to leave this Space."
@@ -1050,14 +1056,14 @@ Please add somebody or delete this Space.",
 	 * @return boolean
 	 */
 	public function show_invitation_link() {
-		return
-			! $this->user_is_member_of_current_blog() &&
+		return ! $this->user_is_member_of_current_blog() &&
 			! $this->superadmin_notice() &&
 			$this->get_plugin_option( 'invitation_link_active' );
 	}
 
 	/**
 	 * Checks if the user is trying to register and adds a form if not.
+	 *
 	 * @return string
 	 */
 	private function get_invitation_link_markup() {
@@ -1074,13 +1080,13 @@ Please add somebody or delete this Space.",
 		return $this->render(
 			'settings_option',
 			array(
-				'id'        => 'input_' . $value,
+				'id'         => 'input_' . $value,
 				'input_name' => $input_name,
-				'text'      => $text,
-				'checked'   => ( $active_value === $value ? 'checked="checked"' : '' ),
-				'value'     => $value,
-				'disabled'  => false !== array_search( $value, $this->get_disabled_options(), true ) ? 'disabled' : '',
-				'icon'      => $icon,
+				'text'       => $text,
+				'checked'    => ( $active_value === $value ? 'checked="checked"' : '' ),
+				'value'      => $value,
+				'disabled'   => false !== array_search( $value, $this->get_disabled_options(), true ) ? 'disabled' : '',
+				'icon'       => $icon,
 			)
 		);
 	}
@@ -1092,7 +1098,7 @@ Please add somebody or delete this Space.",
 	private function get_active_option() {
 		if ( $this->get_plugin_option( 'self_registration' ) ) {
 			return 'self_registration';
-		} else if ( $this->get_plugin_option( 'invitation_link_active' ) ) {
+		} elseif ( $this->get_plugin_option( 'invitation_link_active' ) ) {
 			return 'invitation_link';
 		}
 
@@ -1100,9 +1106,9 @@ Please add somebody or delete this Space.",
 	}
 
 	private function create_invitation_link_settings_option( string $active_value ) {
-		$value = 'invitation_link';
+		$value        = 'invitation_link';
 		$default_role = $this->translate_role( get_option( 'default_role' ) );
-		$description = sprintf(
+		$description  = sprintf(
 			esc_html__(
 				'Users who click on the Invitation Link or enter the Space via Access Code will be added with the role "%s".
 Changing the Access Code will change the Inivitation Link.',
@@ -1112,11 +1118,11 @@ Changing the Access Code will change the Inivitation Link.',
 		);
 
 		$parameters = array(
-			'link' => $this->get_full_invitation_link(),
-			'copy_text' => esc_html__( 'Press Ctrl+C to copy.', 'spaces-invitation' ),
+			'link'                 => $this->get_full_invitation_link(),
+			'copy_text'            => esc_html__( 'Press Ctrl+C to copy.', 'spaces-invitation' ),
 			'change_password_text' => esc_html__( 'Change Access Code', 'spaces-invitation' ),
-			'style' => $active_value === $value ? 'display: block;' : '',
-			'description' => $description,
+			'style'                => $active_value === $value ? 'display: block;' : '',
+			'description'          => $description,
 		);
 
 		return $this->create_settings_option( 'invitation-status', esc_html__( 'Invitation Link', 'spaces-invitation' ), $active_value, $value, 'key' )
@@ -1124,7 +1130,7 @@ Changing the Access Code will change the Inivitation Link.',
 	}
 
 	private function create_self_registration_setting_option( string $active_value ) {
-		$value = 'self_registration';
+		$value       = 'self_registration';
 		$description = esc_html__( 'Self-registration can not be enabled in private Spaces.', 'spaces-invitation' );
 
 		$option = $this->create_settings_option(

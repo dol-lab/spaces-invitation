@@ -60,8 +60,6 @@ class Spaces_Invitation_Settings {
 		add_filter( 'wpmu_blogs_columns', array( $this, 'my_custom_blog_columns' ) );
 		add_action( 'manage_sites_custom_column', array( $this, 'manage_sites_custom_column' ), 10, 3 );
 
-
-
 	}
 
 	public function my_custom_blog_columns( $sites_columns ) {
@@ -83,11 +81,11 @@ class Spaces_Invitation_Settings {
 		}
 		switch_to_blog( $blog_id );
 		$enabled = get_option( 'self_registration', true );
-		$desc = $enabled ? array(
-			'icon' => '✅',
+		$desc    = $enabled ? array(
+			'icon'  => '✅',
 			'title' => 'enabled',
 		) : array(
-			'icon' => '❌',
+			'icon'  => '❌',
 			'title' => 'disabled',
 		);
 		restore_current_blog();
