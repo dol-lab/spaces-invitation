@@ -255,8 +255,8 @@ class Spaces_Invitation {
 	 */
 	public function add_settings_item( $settings_items ) {
 		if ( $this->can_change_invitation_options() ) {
-			$active = $this->get_active_option();
-			$title  = esc_html__( 'Space User Access', 'spaces-invitation' );
+			$active           = $this->get_active_option();
+			$title            = esc_html__( 'Space User Access', 'spaces-invitation' );
 			$settings_items[] = array(
 				'id'       => 'invitation-settings',
 				'html'     => '<a><i class="fa fa-link" aria-hidden="true"></i><span>' . $title . '</span></a>',
@@ -666,9 +666,9 @@ Please add somebody or delete this Space.",
 	public function get_join_notify_component() {
 		$join = $this->get_invitation_link_markup( $this->current_url_compare );
 
-		$can_join = $this->get_plugin_option( 'invitation_link_active' );
+		$can_join            = $this->get_plugin_option( 'invitation_link_active' );
 		$nofication_template = $can_join ? 'notification_button' : 'notification_toggle';
-		$notify_me = ! current_user_can( 'publish_posts' ) ? $this->render( $nofication_template, $this->get_notification_toggle_data() ) : '';
+		$notify_me           = ! current_user_can( 'publish_posts' ) ? $this->render( $nofication_template, $this->get_notification_toggle_data() ) : '';
 
 		if ( $join == '' && $notify_me == '' ) {
 			return '';
@@ -892,7 +892,7 @@ Please add somebody or delete this Space.",
 				'You are currently logged in as a super-admin. Please use a regular account to collaborate.',
 				'spaces-invitation'
 			);
-			$callout = $this->render(
+			$callout         = $this->render(
 				'callout',
 				array(
 					'message' => $callout_message,
