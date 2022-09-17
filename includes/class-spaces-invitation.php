@@ -284,7 +284,6 @@ class Spaces_Invitation {
 					),
 				),
 			);
-			return $settings_items;
 		}
 
 		$leave_space_items = $this->build_leave_space_items();
@@ -974,7 +973,7 @@ Please add somebody or delete this Space.",
 	}
 
 	/**
-	 * Called by add_settings_item to add the leave space button if neccessary.
+	 * Called by add_settings_item to add the leave space button if necessary.
 	 */
 	private function build_leave_space_items() {
 		if ( ! current_user_can( 'publish_posts' ) ) {
@@ -993,15 +992,16 @@ Please add somebody or delete this Space.",
 					),
 					'url'     => get_home_url() . '?leave_space=true',
 				),
-				'html'  => '
+				'html'  => fn( $d ) => <<<HTML
 					<a
-						href="{{ url }}"
+						href="{$d['url']}"
 						title="Click here to leave this Space."
 						class="alert"
-						onclick="return confirm(\'{{confirm}}\')"
+						onclick="return confirm('{$d['confirm']}')"
 					>
-						<i class="fas fa-door-open" aria-hidden="true"></i>{{ text }}
-					</a>',
+						<i class="fas fa-door-open" aria-hidden="true"></i>{$d['text']}
+					</a>
+				HTML,
 			),
 		);
 	}
