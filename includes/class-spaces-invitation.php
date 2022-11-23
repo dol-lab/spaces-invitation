@@ -664,11 +664,16 @@ Please add somebody or delete this Space.",
 	  * @return string
 	  */
 	public function get_join_notify_component() {
+
+		if ( ! is_user_logged_in() ) {
+			return ''; // @todo: add a button: please login to join.
+		}
+
 		$join = $this->get_invitation_link_markup( $this->current_url_compare );
 
-		$can_join            = $this->get_plugin_option( 'invitation_link_active' );
-		$nofication_template = $can_join ? 'notification_button' : 'notification_toggle';
-		$notify_me           = ! current_user_can( 'publish_posts' ) ? $this->render( $nofication_template, $this->get_notification_toggle_data() ) : '';
+		$can_join              = $this->get_plugin_option( 'invitation_link_active' );
+		$notification_template = $can_join ? 'notification_button' : 'notification_toggle';
+		$notify_me             = ! current_user_can( 'publish_posts' ) ? $this->render( $notification_template, $this->get_notification_toggle_data() ) : '';
 
 		if ( $join == '' && $notify_me == '' ) {
 			return '';
