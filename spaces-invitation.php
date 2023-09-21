@@ -19,6 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 require_once __DIR__ . '/includes/class-spaces-invitation-settings.php';
+require_once __DIR__ . '/includes/class-spaces-invitation-markup.php';
 
 // Load plugin class files.
 require_once __DIR__ . '/includes/class-spaces-invitation-comparable.php';

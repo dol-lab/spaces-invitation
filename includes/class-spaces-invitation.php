@@ -9,6 +9,7 @@
  * - be more specific. get_invitation_link and the option should have a different name: "access_secret"?
  * - the while invitation_link vs. access code is still confusing.
  * - there should (probably) be nothing about privacy here
+ * - don't duplicate code form defaultspace...
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -138,6 +139,12 @@ class Spaces_Invitation {
 	private $current_url_compare;
 
 	/**
+	 *
+	 * @var \Spaces_Invitation_Markup
+	 */
+	private $markup;
+
+	/**
 	 * Constructor funtion.
 	 *
 	 * @param string $file File constructor.
@@ -146,6 +153,7 @@ class Spaces_Invitation {
 	public function __construct( $file = '', $version = '1.0.0' ) {
 		$this->req_get  = new Spaces_Invitation_Request( $_GET );
 		$this->req_post = new Spaces_Invitation_Request( $_POST );
+		$this->markup   = new Spaces_Invitation_Markup();
 
 		$this->current_url_compare = $this->get_current_url_comparable();
 
@@ -410,7 +418,7 @@ Please add somebody or delete this Space.",
 	}
 
 	/**
-	 * Returns the genrated invitation link.
+	 * Returns the generated invitation link.
 	 * If there is no link in the database the link is generated.
 	 *
 	 * With this function the invitation link can be added and retrieved only when it is required and not always.
@@ -671,9 +679,13 @@ Please add somebody or delete this Space.",
 
 		$join = $this->get_invitation_link_markup( $this->current_url_compare );
 
-		$can_join              = $this->get_plugin_option( 'invitation_link_active' );
-		$notification_template = $can_join ? 'notification_button' : 'notification_toggle';
-		$notify_me             = ! current_user_can( 'publish_posts' ) ? $this->render( $notification_template, $this->get_notification_toggle_data() ) : '';
+		$can_join                 = $this->get_plugin_option( 'invitation_link_active' );
+		$notification_template_fn = $can_join
+			? fn( $d )=>$this->markup::notification_button( $d )
+			: fn( $d )=>$this->markup::notification_toggle( $d );
+
+		$notify_me = current_user_can( 'publish_posts' ) ? ''
+			: $notification_template_fn( $this->get_notification_toggle_data() );
 
 		if ( $join == '' && $notify_me == '' ) {
 			return '';
@@ -867,7 +879,30 @@ Please add somebody or delete this Space.",
 	 */
 
 	private function is_subscribed( $user_id = 'current_user', $blog_id = 'current_blog' ) {
-		return class_exists( 's2class' ) && new s2class() && ( new s2class() )->is_user_subscribed( $user_id, $blog_id );
+		$s2 = $this->get_s2();
+		if ( is_wp_error( $s2 ) ) {
+			return $s2;
+		}
+		return $s2->is_user_subscribed( $user_id, $blog_id );
+	}
+
+	/**
+	 *
+	 * @return WP_Error|S2_Core
+	 */
+	private function get_s2() {
+		if ( ! function_exists( 'sub2' ) ) {
+			$error_msg = esc_html__(
+				sprintf(
+					'Something went wrong here. The Subscribe2 plugin is not active. Please contact the admin (%s)',
+					get_site_option( 'admin-email' )
+				),
+				'defaultspace'
+			);
+			return new WP_Error( 'broke', $error_msg );
+		}
+		$s2 = sub2();
+		return $s2;
 	}
 
 	/**
